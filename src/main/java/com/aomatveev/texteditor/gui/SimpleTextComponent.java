@@ -45,9 +45,7 @@ public class SimpleTextComponent extends JPanel {
             res.add(new TextLayout(" ", attributesMap, DEFAULT_FRC));
         }
 
-        String text = simpleDocument.toString();
-
-        String[] lines = text.split("\n");
+        String[] lines = simpleDocument.getLines();
         for (int i = 0; i < lines.length; ++i) {
             if ("".equals(lines[i])) {
                 res.add(new TextLayout(" ", attributesMap, DEFAULT_FRC));

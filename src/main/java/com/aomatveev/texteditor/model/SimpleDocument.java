@@ -14,6 +14,10 @@ public class SimpleDocument {
         this.lines = textData.split("\n");
     }
 
+    public String[] getLines() {
+        return lines;
+    }
+
     public String getLine(int index) {
         return lines[index];
     }
