@@ -13,9 +13,15 @@ public class MainActivity {
         frame = new JFrame("Text editor");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        SimpleTextComponent simpleTextComponent = new SimpleTextComponent();
-        frame.add(simpleTextComponent);
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
 
+        SimpleTextComponent simpleTextComponent = new SimpleTextComponent();
+        JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
+        scrollPane.setPreferredSize(new Dimension(1024, 768));
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        frame.getContentPane().add(mainPanel);
         frame.setBackground(Color.WHITE);
         frame.pack();
         frame.setSize(new Dimension(1024, 768));
@@ -23,12 +29,9 @@ public class MainActivity {
     }
 
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                UIManager.put("swing.boldMetal", Boolean.FALSE);
-                createAndShowGUI();
-            }
+        SwingUtilities.invokeLater(() -> {
+            UIManager.put("swing.boldMetal", Boolean.FALSE);
+            createAndShowGUI();
         });
     }
 }

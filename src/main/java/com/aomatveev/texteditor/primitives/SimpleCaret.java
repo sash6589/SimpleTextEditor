@@ -1,16 +1,19 @@
 package com.aomatveev.texteditor.primitives;
 
 public class SimpleCaret {
-    public int lineCount;
-    public int charCount;
+    public int lineIndex;
+    public int charIndex;
+    public int textIndex;
 
     public SimpleCaret() {
-        lineCount = 0;
-        charCount = 0;
+        lineIndex = 0;
+        charIndex = 0;
+        textIndex = 0;
     }
 
-    public SimpleCaret(int lineCount, int charCount) {
-        this.lineCount = lineCount;
-        this.charCount = charCount;
+    public SimpleCaret(int lineIndex, int charIndex, int textIndex) {
+        this.lineIndex = lineIndex;
+        this.charIndex = charIndex;
+        this.textIndex = textIndex;
     }
 }
