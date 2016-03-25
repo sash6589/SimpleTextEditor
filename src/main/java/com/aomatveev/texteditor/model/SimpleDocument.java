@@ -66,9 +66,7 @@ public class SimpleDocument {
     @Override
     public String toString() {
         StringBuilder ans = new StringBuilder();
-        for (StringBuilder line : lines) {
-            ans.append(line);
-        }
+        lines.forEach(ans::append);
         return ans.toString();
     }
 
@@ -80,8 +78,8 @@ public class SimpleDocument {
     private void initLines(String textData) {
         String[] items = textData.split("\n");
         lines = new ArrayList<>();
-        for (int i = 0; i < items.length; ++i) {
-            lines.add(new StringBuilder(items[i]));
+        for (String item : items) {
+            lines.add(new StringBuilder(item));
         }
     }
 

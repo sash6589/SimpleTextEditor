@@ -17,14 +17,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SimpleTextComponent extends JPanel {
+public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private static final FontRenderContext DEFAULT_FRC = new FontRenderContext(null, false, false);
     private static final Map<TextAttribute, Object> attributesMap = new HashMap<>();
 
+    private static final int FONT_SIZE = 14;
+    private static final int TOP_OFFSET = 12;
+    private static final int LEFT_OFFSET = 3;
+    private static final int CHARACTER_WIDTH = 8;
+
+    private int lineSpacing;
+
+    private FontMetrics fontMetrics;
+
+    private Dimension preferredScrollableViewportSize;
+    private boolean preferredScrollableViewportSizeChanged = false;
+
     static {
         attributesMap.put(TextAttribute.FAMILY, "Serif");
-        attributesMap.put(TextAttribute.SIZE, 14);
+        attributesMap.put(TextAttribute.SIZE, FONT_SIZE);
     }
 
     private SimpleDocument simpleDocument;
@@ -34,8 +46,9 @@ public class SimpleTextComponent extends JPanel {
     public SimpleTextComponent() {
         simpleDocument = new SimpleDocument(this);
         currentCaret = simpleDocument.getCurrentCaret();
+        initLineSpacing();
         setBackground(Color.WHITE);
-        setBorder(new EmptyBorder(12, 3, 0, 0));
+        setBorder(new EmptyBorder(TOP_OFFSET, LEFT_OFFSET, 0, 0));
         addKeyListener(new SimpleKeyListener());
         setFocusable(true);
     }
@@ -44,7 +57,13 @@ public class SimpleTextComponent extends JPanel {
         repaint();
     }
 
+    @Override
     protected void paintComponent(Graphics g) {
+
+        if (fontMetrics == null) {
+            fontMetrics = g.getFontMetrics();
+        }
+
         g.clearRect(0, 0, getWidth(), getHeight());
         Graphics2D graphics2D = (Graphics2D) g;
         Point2D.Float origin = computeLayoutOrigin();
@@ -69,11 +88,11 @@ public class SimpleTextComponent extends JPanel {
 
         List<StringBuilder> lines = simpleDocument.getLines();
 
-        for (int i = 0; i < lines.size(); ++i) {
-            if ("".equals(lines.get(i).toString())) {
+        for (StringBuilder line : lines) {
+            if ("".equals(line.toString())) {
                 res.add(new TextLayout(" ", attributesMap, DEFAULT_FRC));
             } else {
-                res.add(new TextLayout(lines.get(i).toString(), attributesMap, DEFAULT_FRC));
+                res.add(new TextLayout(line.toString(), attributesMap, DEFAULT_FRC));
             }
         }
         return res;
@@ -94,19 +113,95 @@ public class SimpleTextComponent extends JPanel {
         return origin;
     }
 
+    private void initLineSpacing() {
+        TextLayout layout = new TextLayout(" ", attributesMap, DEFAULT_FRC);
+        lineSpacing = ((int) (layout.getAscent() + layout.getDescent())) + 1;
+    }
+
+    private Dimension computeDimension() {
+        if (preferredScrollableViewportSize == null) {
+            preferredScrollableViewportSize = new Dimension();
+            preferredScrollableViewportSizeChanged = true;
+        }
+
+        if (preferredScrollableViewportSizeChanged) {
+            int height = TOP_OFFSET + (lineSpacing * simpleDocument.linesCount());
+
+            int maxLen = 0;
+            for (int i = 0; i < simpleDocument.linesCount(); ++i) {
+                if (maxLen < simpleDocument.getLine(i).length()) {
+                    maxLen = simpleDocument.getLine(i).length();
+                }
+            }
+            int width = 0;
+            if (fontMetrics != null) {
+                width = LEFT_OFFSET + (maxLen * CHARACTER_WIDTH);
+            }
+
+            preferredScrollableViewportSize.setSize(Math.max(1024, width), Math.max(768, height));
+            preferredScrollableViewportSizeChanged = false;
+        }
+
+        return preferredScrollableViewportSize;
+    }
+
+    // --- implements Scrollable ---------------------------------
+
+    @Override
+    public Dimension getPreferredSize() {
+        return computeDimension();
+    }
+
+    @Override
+    public Dimension getPreferredScrollableViewportSize() {
+        return computeDimension();
+    }
+
+    @Override
+    public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+        if (orientation == SwingConstants.HORIZONTAL) {
+            return CHARACTER_WIDTH;
+        } else {
+            return lineSpacing;
+        }
+    }
+
+    @Override
+    public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+        if (orientation == SwingConstants.HORIZONTAL) {
+            return visibleRect.width;
+        } else {
+            return visibleRect.height - (visibleRect.height % lineSpacing);
+        }
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportWidth() {
+        return false;
+    }
+
+    @Override
+    public boolean getScrollableTracksViewportHeight() {
+        return false;
+    }
+
+    // --- Key listener ---------------------------------
+
     private class SimpleKeyListener extends KeyAdapter {
         @Override
         public void keyTyped(KeyEvent e) {
-            if  (e.getKeyChar() == '\n') {
+            if (e.getKeyChar() == '\n') {
                 return;
             }
             simpleDocument.insertText(e.getKeyChar());
+            preferredScrollableViewportSizeChanged = true;
         }
 
         @Override
         public void keyPressed(KeyEvent e) {
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                 simpleDocument.insertNewLine();
+                preferredScrollableViewportSizeChanged = true;
             }
         }
     }
