@@ -48,15 +48,30 @@ public class SimpleDocument {
     public void insertText(char c) {
         lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
         length += 1;
-        updateCaretAfterChar();
+        updateCaretAfterInsertChar();
         viewModel.updateView();
     }
 
     public void insertNewLine() {
         lines.add(new StringBuilder(""));
         length += 1;
-        updateCaretAfterNewline();
+        updateCaretAfterInsertNewline();
         viewModel.updateView();
+    }
+
+    public void deleteChar() {
+        if (!currentCaret.atFileBeginning()) {
+            if (currentCaret.atLineBeginning()) {
+                StringBuilder line = lines.get(currentCaret.lineIndex);
+                lines.get(currentCaret.lineIndex - 1).append(line);
+                lines.remove(currentCaret.lineIndex);
+                updateCaretAfterDeleteLine();
+            } else {
+                lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex - 1);
+                updateCaretAfterDeleteChar();
+            }
+            viewModel.updateView();
+        }
     }
 
     public SimpleCaret getCurrentCaret() {
@@ -89,17 +104,24 @@ public class SimpleDocument {
         if (linesCount() > 0) {
             charCount = charCount(linesCount);
         }
-        currentCaret = new SimpleCaret(linesCount, charCount, length());
+        currentCaret = new SimpleCaret(linesCount, charCount);
     }
 
-    private void updateCaretAfterChar() {
-        currentCaret.textIndex += 1;
+    private void updateCaretAfterInsertChar() {
         currentCaret.charIndex += 1;
     }
 
-    private void updateCaretAfterNewline() {
-        currentCaret.textIndex += 1;
+    private void updateCaretAfterInsertNewline() {
         currentCaret.lineIndex = linesCount() - 1;
         currentCaret.charIndex = 0;
+    }
+
+    private void updateCaretAfterDeleteLine() {
+        currentCaret.lineIndex -= 1;
+        currentCaret.charIndex = charCount(currentCaret.lineIndex);
+    }
+
+    private void updateCaretAfterDeleteChar() {
+        currentCaret.charIndex -= 1;
     }
 }

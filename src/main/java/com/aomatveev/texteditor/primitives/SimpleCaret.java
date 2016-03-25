@@ -8,12 +8,18 @@ public class SimpleCaret {
     public SimpleCaret() {
         lineIndex = 0;
         charIndex = 0;
-        textIndex = 0;
     }
 
-    public SimpleCaret(int lineIndex, int charIndex, int textIndex) {
+    public SimpleCaret(int lineIndex, int charIndex) {
         this.lineIndex = lineIndex;
         this.charIndex = charIndex;
-        this.textIndex = textIndex;
+    }
+
+    public boolean atFileBeginning() {
+        return (lineIndex == 0) && (charIndex == 0);
+    }
+
+    public boolean atLineBeginning() {
+        return charIndex == 0;
     }
 }

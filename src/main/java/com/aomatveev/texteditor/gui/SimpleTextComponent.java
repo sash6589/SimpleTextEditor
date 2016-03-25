@@ -188,21 +188,19 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     // --- Key listener ---------------------------------
 
     private class SimpleKeyListener extends KeyAdapter {
-        @Override
-        public void keyTyped(KeyEvent e) {
-            if (e.getKeyChar() == '\n') {
-                return;
-            }
-            simpleDocument.insertText(e.getKeyChar());
-            preferredScrollableViewportSizeChanged = true;
-        }
 
         @Override
         public void keyPressed(KeyEvent e) {
+            preferredScrollableViewportSizeChanged = true;
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                 simpleDocument.insertNewLine();
-                preferredScrollableViewportSizeChanged = true;
+                return;
             }
+            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+                simpleDocument.deleteChar();
+                return;
+            }
+            simpleDocument.insertText(e.getKeyChar());
         }
     }
 }
