@@ -1,13 +1,12 @@
 package com.aomatveev.texteditor.gui;
 
+import com.aomatveev.texteditor.handlers.SimpleKeyListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
@@ -32,7 +31,6 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     private FontMetrics fontMetrics;
 
     private Dimension preferredScrollableViewportSize;
-    private boolean preferredScrollableViewportSizeChanged = false;
 
     static {
         attributesMap.put(TextAttribute.FAMILY, "Serif");
@@ -46,10 +44,11 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     public SimpleTextComponent() {
         document = new SimpleDocument(this);
         currentCaret = document.getCurrentCaret();
+        preferredScrollableViewportSize = new Dimension();
         initLineSpacing();
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(TOP_OFFSET, LEFT_OFFSET, 0, 0));
-        addKeyListener(new SimpleKeyListener());
+        addKeyListener(new SimpleKeyListener(document));
         setFocusable(true);
     }
 
@@ -119,28 +118,21 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     }
 
     private Dimension computeDimension() {
-        if (preferredScrollableViewportSize == null) {
-            preferredScrollableViewportSize = new Dimension();
-            preferredScrollableViewportSizeChanged = true;
+
+        int height = TOP_OFFSET + (lineSpacing * document.linesSize());
+
+        int maxLen = 0;
+        for (int i = 0; i < document.linesSize(); ++i) {
+            if (maxLen < document.getLine(i).length()) {
+                maxLen = document.getLine(i).length();
+            }
+        }
+        int width = 0;
+        if (fontMetrics != null) {
+            width = LEFT_OFFSET + (maxLen * CHARACTER_WIDTH);
         }
 
-        if (preferredScrollableViewportSizeChanged) {
-            int height = TOP_OFFSET + (lineSpacing * document.linesSize());
-
-            int maxLen = 0;
-            for (int i = 0; i < document.linesSize(); ++i) {
-                if (maxLen < document.getLine(i).length()) {
-                    maxLen = document.getLine(i).length();
-                }
-            }
-            int width = 0;
-            if (fontMetrics != null) {
-                width = LEFT_OFFSET + (maxLen * CHARACTER_WIDTH);
-            }
-
-            preferredScrollableViewportSize.setSize(Math.max(1024, width), Math.max(768, height));
-            preferredScrollableViewportSizeChanged = false;
-        }
+        preferredScrollableViewportSize.setSize(Math.max(1024, width), Math.max(768, height));
 
         return preferredScrollableViewportSize;
     }
@@ -171,7 +163,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         if (orientation == SwingConstants.HORIZONTAL) {
             return visibleRect.width;
         } else {
-            return visibleRect.height - (visibleRect.height % lineSpacing);
+             return visibleRect.height - (visibleRect.height % lineSpacing);
         }
     }
 
@@ -183,29 +175,5 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     @Override
     public boolean getScrollableTracksViewportHeight() {
         return false;
-    }
-
-    // --- Key listener ---------------------------------
-
-    private class SimpleKeyListener extends KeyAdapter {
-
-        @Override
-        public void keyPressed(KeyEvent e) {
-            preferredScrollableViewportSizeChanged = true;
-            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                document.insertNewLine();
-                return;
-            }
-            if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                document.deleteChar();
-                return;
-            }
-            if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT ||
-                    e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
-                document.moveCaret(e);
-                return;
-            }
-            document.insertText(e.getKeyChar());
-        }
     }
 }

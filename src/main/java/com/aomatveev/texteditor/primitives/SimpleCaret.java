@@ -99,4 +99,42 @@ public class SimpleCaret {
             charIndex = Math.min(charIndex, document.lineLength(lineIndex));
         }
     }
+
+    public void moveEndLine() {
+        charIndex = document.lineLength(lineIndex);
+    }
+
+    public void moveStartLine() {
+        charIndex = 0;
+    }
+
+    public void moveToPrevWord() {
+        if (atBeginningLine()) {
+            moveLeft();
+            return;
+        }
+        StringBuilder line = document.getLine(lineIndex);
+        for (int i = charIndex - 2; i >= 0; --i) {
+            if ((line.charAt(i) == ' ') && (line.charAt(i + 1) != ' ')) {
+                charIndex = i + 1;
+                return;
+            }
+        }
+        charIndex = 0;
+    }
+
+    public void moveToNextWord() {
+        if (atEndLine()) {
+            moveRight();
+            return;
+        }
+        StringBuilder line = document.getLine(lineIndex);
+        for (int i = charIndex; i < line.length(); ++i) {
+            if ((line.charAt(i) == ' ') && (line.charAt(i + 1) != ' ')) {
+                charIndex = i + 1;
+                return;
+            }
+        }
+        charIndex = line.length();
+    }
 }

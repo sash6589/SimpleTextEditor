@@ -97,6 +97,22 @@ public class SimpleDocument {
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
             currentCaret.moveDown();
         }
+        if (e.getKeyCode() == KeyEvent.VK_END) {
+            currentCaret.moveEndLine();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_HOME) {
+            currentCaret.moveStartLine();
+        }
+        viewModel.updateView();
+    }
+
+    public void moveCaretToWord(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            currentCaret.moveToPrevWord();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            currentCaret.moveToNextWord();
+        }
         viewModel.updateView();
     }
 
