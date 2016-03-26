@@ -3,6 +3,7 @@ package com.aomatveev.texteditor.model;
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,11 +34,11 @@ public class SimpleDocument {
         return lines.get(index);
     }
 
-    public int charCount(int lineIndex) {
+    public int lineLength(int lineIndex) {
         return lines.get(lineIndex).length();
     }
 
-    public int linesCount() {
+    public int linesSize() {
         return lines.size();
     }
 
@@ -48,34 +49,55 @@ public class SimpleDocument {
     public void insertText(char c) {
         lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
         length += 1;
-        updateCaretAfterInsertChar();
+        currentCaret.updateCaretAfterInsertChar();
         viewModel.updateView();
     }
 
     public void insertNewLine() {
-        lines.add(new StringBuilder(""));
+        StringBuilder rest = new StringBuilder("");
+        rest.append(getLine(currentCaret.lineIndex).substring(currentCaret.charIndex));
+        getLine(currentCaret.lineIndex).delete(currentCaret.charIndex, lineLength(currentCaret.lineIndex));
+        lines.add(currentCaret.lineIndex + 1, rest);
         length += 1;
-        updateCaretAfterInsertNewline();
+        currentCaret.updateCaretAfterInsertNewline();
         viewModel.updateView();
     }
 
     public void deleteChar() {
-        if (!currentCaret.atFileBeginning()) {
-            if (currentCaret.atLineBeginning()) {
+        if (!currentCaret.atBeginningFile()) {
+            if (currentCaret.atBeginningLine()) {
                 StringBuilder line = lines.get(currentCaret.lineIndex);
+                int lineLength = lineLength(currentCaret.lineIndex - 1);
                 lines.get(currentCaret.lineIndex - 1).append(line);
                 lines.remove(currentCaret.lineIndex);
-                updateCaretAfterDeleteLine();
+                currentCaret.updateCaretAfterDeleteLine(lineLength);
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex - 1);
-                updateCaretAfterDeleteChar();
+                currentCaret.updateCaretAfterDeleteChar();
             }
+            length -= 1;
             viewModel.updateView();
         }
     }
 
     public SimpleCaret getCurrentCaret() {
         return currentCaret;
+    }
+
+    public void moveCaret(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+            currentCaret.moveLeft();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            currentCaret.moveRight();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_UP) {
+            currentCaret.moveUp();
+        }
+        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
+            currentCaret.moveDown();
+        }
+        viewModel.updateView();
     }
 
     @Override
@@ -99,29 +121,11 @@ public class SimpleDocument {
     }
 
     private void initCaret() {
-        int linesCount = Math.max(linesCount() - 1, 0);
+        int linesCount = Math.max(linesSize() - 1, 0);
         int charCount = 0;
-        if (linesCount() > 0) {
-            charCount = charCount(linesCount);
+        if (linesSize() > 0) {
+            charCount = lineLength(linesCount);
         }
-        currentCaret = new SimpleCaret(linesCount, charCount);
-    }
-
-    private void updateCaretAfterInsertChar() {
-        currentCaret.charIndex += 1;
-    }
-
-    private void updateCaretAfterInsertNewline() {
-        currentCaret.lineIndex = linesCount() - 1;
-        currentCaret.charIndex = 0;
-    }
-
-    private void updateCaretAfterDeleteLine() {
-        currentCaret.lineIndex -= 1;
-        currentCaret.charIndex = charCount(currentCaret.lineIndex);
-    }
-
-    private void updateCaretAfterDeleteChar() {
-        currentCaret.charIndex -= 1;
+        currentCaret = new SimpleCaret(this, linesCount, charCount);
     }
 }

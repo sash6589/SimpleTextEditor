@@ -4,6 +4,8 @@ import com.aomatveev.texteditor.gui.SimpleTextComponent;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 
 public class MainActivity {
 
@@ -15,11 +17,17 @@ public class MainActivity {
         mainPanel.setLayout(new BorderLayout());
 
         SimpleTextComponent simpleTextComponent = new SimpleTextComponent();
+
         JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
+        InputMap im = scrollPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
+        im.put(KeyStroke.getKeyStroke("UP"), "none");
+        im.put(KeyStroke.getKeyStroke("DOWN"), "none");
+        im.put(KeyStroke.getKeyStroke("LEFT"), "none");
+        im.put(KeyStroke.getKeyStroke("RIGHT"), "none");
+
         mainPanel.add(scrollPane, BorderLayout.CENTER);
 
         frame.getContentPane().add(mainPanel);
-        frame.add(scrollPane);
         frame.setBackground(Color.WHITE);
         frame.pack();
         frame.setSize(new Dimension(1024, 768));

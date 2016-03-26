@@ -39,13 +39,13 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         attributesMap.put(TextAttribute.SIZE, FONT_SIZE);
     }
 
-    private SimpleDocument simpleDocument;
+    private SimpleDocument document;
 
     private SimpleCaret currentCaret;
 
     public SimpleTextComponent() {
-        simpleDocument = new SimpleDocument(this);
-        currentCaret = simpleDocument.getCurrentCaret();
+        document = new SimpleDocument(this);
+        currentCaret = document.getCurrentCaret();
         initLineSpacing();
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(TOP_OFFSET, LEFT_OFFSET, 0, 0));
@@ -82,11 +82,11 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private List<TextLayout> generateTextLayouts() {
         List<TextLayout> res = new ArrayList<>();
-        if (simpleDocument.length() == 0) {
+        if (document.length() == 0) {
             res.add(new TextLayout(" ", attributesMap, DEFAULT_FRC));
         }
 
-        List<StringBuilder> lines = simpleDocument.getLines();
+        List<StringBuilder> lines = document.getLines();
 
         for (StringBuilder line : lines) {
             if ("".equals(line.toString())) {
@@ -125,12 +125,12 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         }
 
         if (preferredScrollableViewportSizeChanged) {
-            int height = TOP_OFFSET + (lineSpacing * simpleDocument.linesCount());
+            int height = TOP_OFFSET + (lineSpacing * document.linesSize());
 
             int maxLen = 0;
-            for (int i = 0; i < simpleDocument.linesCount(); ++i) {
-                if (maxLen < simpleDocument.getLine(i).length()) {
-                    maxLen = simpleDocument.getLine(i).length();
+            for (int i = 0; i < document.linesSize(); ++i) {
+                if (maxLen < document.getLine(i).length()) {
+                    maxLen = document.getLine(i).length();
                 }
             }
             int width = 0;
@@ -193,14 +193,19 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         public void keyPressed(KeyEvent e) {
             preferredScrollableViewportSizeChanged = true;
             if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                simpleDocument.insertNewLine();
+                document.insertNewLine();
                 return;
             }
             if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-                simpleDocument.deleteChar();
+                document.deleteChar();
                 return;
             }
-            simpleDocument.insertText(e.getKeyChar());
+            if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT ||
+                    e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN) {
+                document.moveCaret(e);
+                return;
+            }
+            document.insertText(e.getKeyChar());
         }
     }
 }
