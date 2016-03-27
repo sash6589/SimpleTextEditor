@@ -2,6 +2,7 @@ package com.aomatveev.texteditor.handlers;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.model.SimpleDocument;
+import javafx.util.Pair;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,29 +22,15 @@ public class SimpleMouseListener extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        float clickX = e.getX();
-        float clickY = e.getY();
-
-        int lineIndex = findLine(clickY);
-        int charIndex = 0;
-        List<TextLayout> layouts = viewModel.getTextLayouts();
-        if (lineIndex < layouts.size()) {
-            TextHitInfo currentHit = layouts.get(lineIndex).hitTestChar(clickX, clickY);
-            charIndex = currentHit.getInsertionIndex();
-        }
-        document.moveCaret(lineIndex, charIndex);
+        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel, document);
+        document.cancelSelect();
+        document.moveCaret(position.getKey(), position.getValue());
     }
 
-    private int findLine(float clickY) {
-        List<TextLayout> layouts = viewModel.getTextLayouts();
-        float yValue = 0;
-
-        for (int i = 0; i < layouts.size(); ++i) {
-            if (yValue + layouts.get(i).getAscent() + layouts.get(i).getDescent() >= clickY) {
-                return i;
-            }
-            yValue += layouts.get(i).getAscent() + layouts.get(i).getDescent();
-        }
-        return layouts.size();
+    @Override
+    public void mousePressed(MouseEvent e) {
+        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel, document);
+        document.moveSelectedCaret(position.getKey(), position.getValue());
     }
+
 }

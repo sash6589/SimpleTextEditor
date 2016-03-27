@@ -2,8 +2,10 @@ package com.aomatveev.texteditor.gui;
 
 import com.aomatveev.texteditor.handlers.SimpleKeyListener;
 import com.aomatveev.texteditor.handlers.SimpleMouseListener;
+import com.aomatveev.texteditor.handlers.SimpleMouseMotionListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
+import javafx.util.Pair;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -11,6 +13,7 @@ import java.awt.*;
 import java.awt.font.FontRenderContext;
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
+import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.util.List;
 import java.util.ArrayList;
@@ -26,6 +29,9 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     private static final int TOP_OFFSET = 12;
     private static final int LEFT_OFFSET = 3;
     private static final int CHARACTER_WIDTH = 8;
+
+    private static final Color SELECT_COLOR = Color.orange;
+    private static final Color TEXT_COLOR = Color.black;
 
     private int lineSpacing;
 
@@ -53,6 +59,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         setBorder(new EmptyBorder(TOP_OFFSET, LEFT_OFFSET, 0, 0));
         addKeyListener(new SimpleKeyListener(document));
         addMouseListener(new SimpleMouseListener(this, document));
+        addMouseMotionListener(new SimpleMouseMotionListener(this, document));
         setFocusable(true);
     }
 
@@ -85,9 +92,20 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         Point2D.Float origin = computeLayoutOrigin();
 
         generateTextLayouts();
-        for (TextLayout layout : textLayouts) {
-            layout.draw(graphics2D, (float) origin.getX(), (float) origin.getY());
-            origin.y += layout.getAscent() + layout.getDescent();
+        for (int i = 0; i < textLayouts.size(); ++i) {
+            if (document.isSelected()) {
+                Pair<Integer, Integer> bounds = document.getSelectedBounds(i);
+                if (bounds != null) {
+                    Shape base = textLayouts.get(i).getLogicalHighlightShape(bounds.getKey(), bounds.getValue());
+                    AffineTransform at = AffineTransform.getTranslateInstance(origin.getX(), origin.getY());
+                    Shape highlight = at.createTransformedShape(base);
+                    graphics2D.setColor(SELECT_COLOR);
+                    graphics2D.fill(highlight);
+                }
+            }
+            graphics2D.setColor(TEXT_COLOR);
+            textLayouts.get(i).draw(graphics2D, (float) origin.getX(), (float) origin.getY());
+            origin.y += textLayouts.get(i).getAscent() + textLayouts.get(i).getDescent();
         }
 
         origin = computeCaretOrigin(textLayouts.get(currentCaret.lineIndex));

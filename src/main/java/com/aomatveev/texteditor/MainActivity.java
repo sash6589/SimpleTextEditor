@@ -4,8 +4,6 @@ import com.aomatveev.texteditor.gui.SimpleTextComponent;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 
 public class MainActivity {
 

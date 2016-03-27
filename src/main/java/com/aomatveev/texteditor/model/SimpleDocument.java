@@ -2,6 +2,7 @@ package com.aomatveev.texteditor.model;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
+import javafx.util.Pair;
 
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -11,10 +12,14 @@ public class SimpleDocument {
     private SimpleTextComponent viewModel;
     private List<StringBuilder> lines;
     private SimpleCaret currentCaret;
+    private SimpleCaret startSelectCaret;
     private int length;
+    private boolean isSelected;
 
     public SimpleDocument(SimpleTextComponent viewModel) {
         this.viewModel = viewModel;
+        isSelected = false;
+        startSelectCaret = null;
         initLines();
         initCaret();
     }
@@ -22,6 +27,8 @@ public class SimpleDocument {
     public SimpleDocument(SimpleTextComponent viewModel, String textData) {
         this.viewModel = viewModel;
         this.length = textData.length();
+        isSelected = false;
+        startSelectCaret = null;
         initLines(textData);
         initCaret();
     }
@@ -44,6 +51,10 @@ public class SimpleDocument {
 
     public int length() {
         return length;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
     }
 
     public void insertText(char c) {
@@ -82,6 +93,31 @@ public class SimpleDocument {
 
     public SimpleCaret getCurrentCaret() {
         return currentCaret;
+    }
+
+    public Pair<Integer, Integer> getSelectedBounds(int index) {
+        SimpleCaret first, second;
+        if (currentCaret.compareTo(startSelectCaret) < 0) {
+            first = new SimpleCaret(currentCaret);
+            second = new SimpleCaret(startSelectCaret);
+        } else {
+            first = new SimpleCaret(startSelectCaret);
+            second = new SimpleCaret(currentCaret);
+        }
+        if ((index < first.lineIndex) || (index > second.lineIndex)) {
+            return null;
+        }
+        if ((index > first.lineIndex) && (index < second.lineIndex)) {
+            return new Pair<>(0, lineLength(index));
+        }
+        if (first.lineIndex == second.lineIndex) {
+            return new Pair<>(first.charIndex, second.charIndex);
+        }
+        if (index == first.lineIndex) {
+            return new Pair<>(first.charIndex, lineLength(index));
+        } else {
+            return new Pair<>(0, second.charIndex);
+        }
     }
 
     public void moveCaret(KeyEvent e) {
@@ -128,6 +164,27 @@ public class SimpleDocument {
             currentCaret.moveToNextWord();
         }
         viewModel.updateView();
+    }
+
+    public void moveSelectedCaret(KeyEvent e) {
+        if (!isSelected) {
+            isSelected = true;
+            startSelectCaret = new SimpleCaret(currentCaret);
+        }
+        moveCaret(e);
+    }
+
+    public void moveSelectedCaret(int lineIndex, int charIndex) {
+        if (!isSelected) {
+            isSelected = true;
+            startSelectCaret = new SimpleCaret(this, lineIndex, charIndex);
+        }
+        moveCaret(lineIndex, charIndex);
+    }
+
+    public void cancelSelect() {
+        isSelected = false;
+        startSelectCaret = null;
     }
 
     @Override

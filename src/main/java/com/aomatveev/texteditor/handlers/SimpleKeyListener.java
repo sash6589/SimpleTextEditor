@@ -19,25 +19,35 @@ public class SimpleKeyListener extends KeyAdapter {
         if (e.isControlDown()) {
 
             if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                document.cancelSelect();
                 document.moveCaretToWord(e);
                 return;
             }
         }
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+            document.cancelSelect();
             document.insertNewLine();
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
+            document.cancelSelect();
             document.deleteChar();
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT ||
                 e.getKeyCode() == KeyEvent.VK_UP || e.getKeyCode() == KeyEvent.VK_DOWN ||
                 e.getKeyCode() == KeyEvent.VK_END || e.getKeyCode() == KeyEvent.VK_HOME) {
-            document.moveCaret(e);
-            return;
+            if (e.isShiftDown()) {
+                document.moveSelectedCaret(e);
+                return;
+            } else {
+                document.cancelSelect();
+                document.moveCaret(e);
+                return;
+            }
         }
         if (!specialKey(e)) {
+            document.cancelSelect();
             if (e.isShiftDown()) {
                 document.insertText(Character.toUpperCase(e.getKeyChar()));
             } else {
