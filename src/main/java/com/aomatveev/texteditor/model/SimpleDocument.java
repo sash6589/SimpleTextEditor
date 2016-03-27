@@ -106,6 +106,20 @@ public class SimpleDocument {
         viewModel.updateView();
     }
 
+    public void moveCaret(int lineIndex, int charIndex) {
+        if (lineIndex == linesSize()) {
+            if (lineLength(lineIndex - 1) > 0) {
+                lines.add(new StringBuilder(""));
+                length += 1;
+            } else {
+                lineIndex -= 1;
+            }
+        }
+        charIndex = Math.min(lineLength(lineIndex), charIndex);
+        currentCaret.setPosition(lineIndex, charIndex);
+        viewModel.updateView();
+    }
+
     public void moveCaretToWord(KeyEvent e) {
         if (e.getKeyCode() == KeyEvent.VK_LEFT) {
             currentCaret.moveToPrevWord();

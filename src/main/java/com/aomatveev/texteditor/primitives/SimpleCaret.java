@@ -44,6 +44,11 @@ public class SimpleCaret {
         return lineIndex == document.linesSize() - 1;
     }
 
+    public void setPosition(int lineIndex, int charIndex) {
+        this.lineIndex = lineIndex;
+        this.charIndex = charIndex;
+    }
+
     public void updateCaretAfterInsertChar() {
         charIndex += 1;
     }

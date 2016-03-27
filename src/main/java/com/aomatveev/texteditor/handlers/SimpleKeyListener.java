@@ -17,6 +17,7 @@ public class SimpleKeyListener extends KeyAdapter {
     @Override
     public void keyPressed(KeyEvent e) {
         if (e.isControlDown()) {
+
             if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
                 document.moveCaretToWord(e);
                 return;
@@ -36,12 +37,18 @@ public class SimpleKeyListener extends KeyAdapter {
             document.moveCaret(e);
             return;
         }
-        if (!e.isActionKey()) {
+        if (!specialKey(e)) {
             if (e.isShiftDown()) {
                 document.insertText(Character.toUpperCase(e.getKeyChar()));
             } else {
                 document.insertText(e.getKeyChar());
             }
         }
+    }
+
+    private boolean specialKey(KeyEvent e) {
+        return (e.getKeyCode() == KeyEvent.CHAR_UNDEFINED) || (e.isActionKey())
+                || (e.getKeyCode() == KeyEvent.VK_CONTROL) || (e.getKeyCode() == KeyEvent.VK_SHIFT)
+                || (e.getKeyCode() == KeyEvent.VK_ALT);
     }
 }

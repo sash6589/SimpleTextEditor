@@ -1,6 +1,7 @@
 package com.aomatveev.texteditor.gui;
 
 import com.aomatveev.texteditor.handlers.SimpleKeyListener;
+import com.aomatveev.texteditor.handlers.SimpleMouseListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 
@@ -41,6 +42,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private SimpleCaret currentCaret;
 
+    private List<TextLayout> textLayouts;
+
     public SimpleTextComponent() {
         document = new SimpleDocument(this);
         currentCaret = document.getCurrentCaret();
@@ -49,11 +52,25 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         setBackground(Color.WHITE);
         setBorder(new EmptyBorder(TOP_OFFSET, LEFT_OFFSET, 0, 0));
         addKeyListener(new SimpleKeyListener(document));
+        addMouseListener(new SimpleMouseListener(this, document));
         setFocusable(true);
     }
 
     public void updateView() {
         repaint();
+    }
+
+    public List<TextLayout> getTextLayouts() {
+        return textLayouts;
+    }
+
+    public Point2D.Float computeLayoutOrigin() {
+        Point2D.Float origin = new Point2D.Float();
+
+        origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
+        origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
+
+        return origin;
     }
 
     @Override
@@ -67,7 +84,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         Graphics2D graphics2D = (Graphics2D) g;
         Point2D.Float origin = computeLayoutOrigin();
 
-        List<TextLayout> textLayouts = generateTextLayouts();
+        generateTextLayouts();
         for (TextLayout layout : textLayouts) {
             layout.draw(graphics2D, (float) origin.getX(), (float) origin.getY());
             origin.y += layout.getAscent() + layout.getDescent();
@@ -79,11 +96,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         graphics2D.draw(carets[0]);
     }
 
-    private List<TextLayout> generateTextLayouts() {
+    private void generateTextLayouts() {
         List<TextLayout> res = new ArrayList<>();
-        if (document.length() == 0) {
-            res.add(new TextLayout(" ", attributesMap, DEFAULT_FRC));
-        }
 
         List<StringBuilder> lines = document.getLines();
 
@@ -94,16 +108,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                 res.add(new TextLayout(line.toString(), attributesMap, DEFAULT_FRC));
             }
         }
-        return res;
-    }
-
-    private Point2D.Float computeLayoutOrigin() {
-        Point2D.Float origin = new Point2D.Float();
-
-        origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
-        origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
-
-        return origin;
+        textLayouts = res;
     }
 
     private Point2D.Float computeCaretOrigin(TextLayout layout) {
