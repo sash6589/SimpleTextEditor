@@ -18,20 +18,20 @@ public class SimpleDocument {
 
     public SimpleDocument(SimpleTextComponent viewModel) {
         this.viewModel = viewModel;
-        isSelected = false;
-        startSelectCaret = null;
-        initLines();
-        initCaret();
+        newDocument();
     }
 
     public SimpleDocument(SimpleTextComponent viewModel, String textData) {
         this.viewModel = viewModel;
-        this.length = textData.length();
-        isSelected = false;
-        startSelectCaret = null;
-        initLines(textData);
-        initCaret();
+        length = textData.length();
+        init();
     }
+
+    public void newDocument() {
+        length = 0;
+        init();
+    }
+
 
     public List<StringBuilder> getLines() {
         return lines;
@@ -60,7 +60,31 @@ public class SimpleDocument {
     public void insertText(char c) {
         lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
         length += 1;
-        currentCaret.updateCaretAfterInsertChar();
+        currentCaret.updateAfterInsertChar();
+        viewModel.updateView();
+    }
+
+    public void insertText(String text) {
+        String[] parts = text.split("\n");
+        if (text.charAt(0) == '\n') {
+            insertNewLine();
+        }
+        for (int i = 0; i < parts.length; ++i) {
+            insertLine(parts[i]);
+            if (i < parts.length - 1) {
+                insertNewLine();
+            }
+        }
+        if (text.charAt(text.length() - 1) == '\n') {
+            insertNewLine();
+        }
+        viewModel.updateView();
+    }
+
+    public void insertLine(String text) {
+        lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, text);
+        length += text.length();
+        currentCaret.updateAfterInsertText(text);
         viewModel.updateView();
     }
 
@@ -70,8 +94,13 @@ public class SimpleDocument {
         getLine(currentCaret.lineIndex).delete(currentCaret.charIndex, lineLength(currentCaret.lineIndex));
         lines.add(currentCaret.lineIndex + 1, rest);
         length += 1;
-        currentCaret.updateCaretAfterInsertNewline();
+        currentCaret.updateAfterInsertNewline();
         viewModel.updateView();
+    }
+
+    public void append(String text) {
+        currentCaret.moveToEndFile();
+        insertText(text);
     }
 
     public void deleteChar() {
@@ -81,10 +110,10 @@ public class SimpleDocument {
                 int lineLength = lineLength(currentCaret.lineIndex - 1);
                 lines.get(currentCaret.lineIndex - 1).append(line);
                 lines.remove(currentCaret.lineIndex);
-                currentCaret.updateCaretAfterDeleteLine(lineLength);
+                currentCaret.updateAfterDeleteLine(lineLength);
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex - 1);
-                currentCaret.updateCaretAfterDeleteChar();
+                currentCaret.updateAfterDeleteChar();
             }
             length -= 1;
             viewModel.updateView();
@@ -190,8 +219,17 @@ public class SimpleDocument {
     @Override
     public String toString() {
         StringBuilder ans = new StringBuilder();
-        lines.forEach(ans::append);
+        for (int i = 0; i < linesSize(); ++i) {
+            ans.append(lines.get(i)).append("\n");
+        }
         return ans.toString();
+    }
+
+    private void init() {
+        isSelected = false;
+        startSelectCaret = null;
+        initLines();
+        initCaret();
     }
 
     private void initLines() {

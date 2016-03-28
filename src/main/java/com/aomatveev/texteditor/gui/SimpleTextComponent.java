@@ -35,8 +35,6 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private int lineSpacing;
 
-    private FontMetrics fontMetrics;
-
     private Dimension preferredScrollableViewportSize;
 
     static {
@@ -63,6 +61,16 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         setFocusable(true);
     }
 
+    public void newFile() {
+        document.newDocument();
+        currentCaret = document.getCurrentCaret();
+        updateView();
+    }
+
+    public void append(String text) {
+        document.append(text);
+    }
+
     public void updateView() {
         repaint();
     }
@@ -71,7 +79,11 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         return textLayouts;
     }
 
-    public Point2D.Float computeLayoutOrigin() {
+    public String getText() {
+        return document.toString();
+    }
+
+    private Point2D.Float computeLayoutOrigin() {
         Point2D.Float origin = new Point2D.Float();
 
         origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
@@ -82,10 +94,6 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     @Override
     protected void paintComponent(Graphics g) {
-
-        if (fontMetrics == null) {
-            fontMetrics = g.getFontMetrics();
-        }
 
         g.clearRect(0, 0, getWidth(), getHeight());
         Graphics2D graphics2D = (Graphics2D) g;
@@ -150,10 +158,9 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                 maxLen = document.getLine(i).length();
             }
         }
-        int width = 0;
-        if (fontMetrics != null) {
-            width = LEFT_OFFSET + (maxLen * CHARACTER_WIDTH);
-        }
+
+        int width = LEFT_OFFSET + (maxLen * CHARACTER_WIDTH);
+
 
         preferredScrollableViewportSize.setSize(Math.max(1024, width), Math.max(768, height));
 

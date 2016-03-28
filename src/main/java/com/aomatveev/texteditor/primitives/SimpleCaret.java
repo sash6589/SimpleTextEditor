@@ -59,22 +59,26 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         this.charIndex = charIndex;
     }
 
-    public void updateCaretAfterInsertChar() {
+    public void updateAfterInsertChar() {
         charIndex += 1;
     }
 
-    public void updateCaretAfterInsertNewline() {
+    public void updateAfterInsertNewline() {
         lineIndex += 1;
         charIndex = 0;
     }
 
-    public void updateCaretAfterDeleteLine(int lineLength) {
+    public void updateAfterDeleteLine(int lineLength) {
         lineIndex -= 1;
         charIndex = lineLength;
     }
 
-    public void updateCaretAfterDeleteChar() {
+    public void updateAfterDeleteChar() {
         charIndex -= 1;
+    }
+
+    public void updateAfterInsertText(String text) {
+        charIndex += text.length();
     }
 
     public void moveLeft() {
@@ -151,6 +155,11 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
             }
         }
         charIndex = line.length();
+    }
+
+    public void moveToEndFile() {
+        lineIndex = document.linesSize() - 1;
+        charIndex = document.lineLength(lineIndex);
     }
 
     @Override
