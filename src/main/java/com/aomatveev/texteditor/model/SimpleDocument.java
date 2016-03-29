@@ -4,7 +4,13 @@ import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 import javafx.util.Pair;
 
+import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.DataFlavor;
+import java.awt.datatransfer.StringSelection;
+import java.awt.datatransfer.UnsupportedFlavorException;
 import java.awt.event.KeyEvent;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -120,19 +126,56 @@ public class SimpleDocument {
         }
     }
 
+    public void paste(){
+        String text = "";
+        try {
+            text = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+        } catch (UnsupportedFlavorException | IOException e) {
+            e.printStackTrace();
+        }
+        insertText(text);
+        viewModel.updateView();
+    }
+
+    public void copy() {
+        String text = getSelectedText();
+        StringSelection stringSelection = new StringSelection(text);
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        clipboard.setContents(stringSelection, null);
+    }
+
+    public void cut() {
+        if (!isSelected) {
+            return;
+        }
+        Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
+        SimpleCaret first = bounds.getKey();
+        SimpleCaret second = bounds.getValue();
+        while (first.lineIndex != second.lineIndex) {
+            removeUntilCaret(second);
+        }
+        lines.get(first.lineIndex).delete(first.charIndex, second.charIndex);
+        length -= second.charIndex - first.charIndex;
+        currentCaret.setPosition(first);
+        cancelSelect();
+        viewModel.updateView();
+    }
+
+    public void selectAll() {
+        isSelected = true;
+        startSelectCaret = new SimpleCaret(this, 0, 0);
+        currentCaret.moveToEndFile();
+        viewModel.updateView();
+    }
+
     public SimpleCaret getCurrentCaret() {
         return currentCaret;
     }
 
     public Pair<Integer, Integer> getSelectedBounds(int index) {
-        SimpleCaret first, second;
-        if (currentCaret.compareTo(startSelectCaret) < 0) {
-            first = new SimpleCaret(currentCaret);
-            second = new SimpleCaret(startSelectCaret);
-        } else {
-            first = new SimpleCaret(startSelectCaret);
-            second = new SimpleCaret(currentCaret);
-        }
+        Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
+        SimpleCaret first = bounds.getKey();
+        SimpleCaret second = bounds.getValue();
         if ((index < first.lineIndex) || (index > second.lineIndex)) {
             return null;
         }
@@ -150,6 +193,16 @@ public class SimpleDocument {
     }
 
     public void moveCaret(KeyEvent e) {
+        if (e.isControlDown()) {
+            if (e.getKeyCode() == KeyEvent.VK_LEFT) {
+                currentCaret.moveToPrevWord();
+            }
+            if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
+                currentCaret.moveToNextWord();
+            }
+            viewModel.updateView();
+            return;
+        }
         if (e.getKeyCode() == KeyEvent.VK_LEFT) {
             currentCaret.moveLeft();
         }
@@ -252,5 +305,36 @@ public class SimpleDocument {
             charCount = lineLength(linesCount);
         }
         currentCaret = new SimpleCaret(this, linesCount, charCount);
+    }
+
+    private Pair<SimpleCaret, SimpleCaret> findSelectedBounds() {
+        if (currentCaret.compareTo(startSelectCaret) < 0) {
+            return new Pair<>(new SimpleCaret(currentCaret), new SimpleCaret(startSelectCaret));
+        } else {
+            return new Pair<>(new SimpleCaret(startSelectCaret), new SimpleCaret(currentCaret));
+        }
+    }
+
+    private void removeUntilCaret(SimpleCaret caret) {
+        length -= caret.charIndex;
+        int newCharIndex = lineLength(caret.lineIndex - 1);
+        StringBuilder rest = new StringBuilder(getLine(caret.lineIndex).substring(caret.charIndex));
+        lines.get(caret.lineIndex - 1).append(rest);
+        lines.remove(caret.lineIndex);
+        caret.setPosition(caret.lineIndex - 1, newCharIndex);
+    }
+
+    private String getSelectedText() {
+        StringBuilder res = new StringBuilder();
+        Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
+        SimpleCaret first = bounds.getKey();
+        SimpleCaret second = bounds.getValue();
+        while (first.lineIndex != second.lineIndex) {
+            res.append(lines.get(first.lineIndex).substring(first.charIndex)).append("\n");
+            first.lineIndex += 1;
+            first.charIndex = 0;
+        }
+        res.append(lines.get(first.lineIndex).substring(first.charIndex, second.charIndex));
+        return res.toString();
     }
 }

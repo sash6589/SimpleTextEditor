@@ -9,6 +9,7 @@ import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
 
 public class MainActivity {
 
@@ -23,6 +24,11 @@ public class MainActivity {
     private static JMenuItem openItem;
     private static JMenuItem saveItem;
     private static JMenuItem exitItem;
+
+    private static JMenuItem pasteItem;
+    private static JMenuItem copyItem;
+    private static JMenuItem cutItem;
+    private static JMenuItem selectAll;
 
     private static void initTextPanel(JFrame frame) {
         JPanel mainPanel = new JPanel();
@@ -57,19 +63,44 @@ public class MainActivity {
         saveItem = new JMenuItem("Save");
         exitItem = new JMenuItem("Exit");
 
+        JMenu editMenu = new JMenu("Edit");
+
+        pasteItem = new JMenuItem("Paste");
+        copyItem = new JMenuItem("Copy");
+        cutItem = new JMenuItem("Cut");
+        selectAll = new JMenuItem("Select All");
+
         frame.setJMenuBar(menuBar);
         menuBar.add(fileMenu);
+        menuBar.add(editMenu);
 
         fileMenu.add(newItem);
         fileMenu.add(openItem);
         fileMenu.add(saveItem);
         fileMenu.add(exitItem);
 
+        editMenu.add(pasteItem);
+        editMenu.add(copyItem);
+        editMenu.add(cutItem);
+        editMenu.add(selectAll);
+
+        newItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
+        openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
+        saveItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_S, ActionEvent.CTRL_MASK));
+        pasteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
+        copyItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
+        cutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.CTRL_MASK));
+        selectAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ActionEvent.CTRL_MASK));
+
         ActionListener listener = new SimpleActionListener();
         newItem.addActionListener(listener);
         openItem.addActionListener(listener);
         saveItem.addActionListener(listener);
         exitItem.addActionListener(listener);
+        pasteItem.addActionListener(listener);
+        copyItem.addActionListener(listener);
+        cutItem.addActionListener(listener);
+        selectAll.addActionListener(listener);
     }
 
     private static void newFile() {
@@ -95,6 +126,22 @@ public class MainActivity {
         System.exit(0);
     }
 
+    private static void paste() {
+        simpleTextComponent.paste();
+    }
+
+    private static void copy() {
+        simpleTextComponent.copy();
+    }
+
+    private static void cut() {
+        simpleTextComponent.cut();
+    }
+
+    private static void selectAll() {
+        simpleTextComponent.selectAll();
+    }
+
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Text editor");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -105,9 +152,6 @@ public class MainActivity {
 
         frame.setBackground(Color.WHITE);
         frame.pack();
-//        int width = simpleTextComponent.getWidth() + scrollPane.getVerticalScrollBar().getWidth();
-//        int height = menuBar.getHeight() + simpleTextComponent.getHeight() + scrollPane.getHorizontalScrollBar().getHeight();
-//        System.out.println(width + " " + height);
         frame.setVisible(true);
     }
 
@@ -135,6 +179,22 @@ public class MainActivity {
             }
             if (choice == exitItem) {
                 exitProgram();
+                return;
+            }
+            if (choice == pasteItem) {
+                paste();
+                return;
+            }
+            if (choice == copyItem) {
+                copy();
+                return;
+            }
+            if (choice == cutItem) {
+                cut();
+                return;
+            }
+            if (choice == selectAll) {
+                selectAll();
                 return;
             }
         }

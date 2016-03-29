@@ -95,13 +95,20 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         }
     }
 
-    private Point2D.Float computeLayoutOrigin() {
-        Point2D.Float origin = new Point2D.Float();
+    public void paste() {
+        document.paste();
+    }
 
-        origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
-        origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
+    public void copy() {
+        document.copy();
+    }
 
-        return origin;
+    public void cut() {
+        document.cut();
+    }
+
+    public void selectAll() {
+        document.selectAll();
     }
 
     @Override
@@ -148,6 +155,16 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
             graphics2D.draw(carets[0]);
         }
     }
+
+    private Point2D.Float computeLayoutOrigin() {
+        Point2D.Float origin = new Point2D.Float();
+
+        origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
+        origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
+
+        return origin;
+    }
+
 
     private Point2D.Float computeCaretOrigin(TextLayout layout) {
         Point2D.Float origin = computeLayoutOrigin();

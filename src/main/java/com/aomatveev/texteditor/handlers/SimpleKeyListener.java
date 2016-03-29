@@ -16,22 +16,20 @@ public class SimpleKeyListener extends KeyAdapter {
 
     @Override
     public void keyPressed(KeyEvent e) {
-        if (e.isControlDown()) {
-
-            if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                document.cancelSelect();
-                document.moveCaretToWord(e);
-                return;
-            }
-        }
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-            document.cancelSelect();
+            if (document.isSelected()) {
+                document.cut();
+            }
             document.insertNewLine();
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_BACK_SPACE) {
-            document.cancelSelect();
-            document.deleteChar();
+            if (document.isSelected()) {
+                document.cut();
+            }
+            else {
+                document.deleteChar();
+            }
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_LEFT || e.getKeyCode() == KeyEvent.VK_RIGHT ||
@@ -47,7 +45,9 @@ public class SimpleKeyListener extends KeyAdapter {
             }
         }
         if (!specialKey(e)) {
-            document.cancelSelect();
+            if (document.isSelected()) {
+                document.cut();
+            }
             if (e.isShiftDown()) {
                 document.insertText(Character.toUpperCase(e.getKeyChar()));
             } else {
@@ -59,6 +59,6 @@ public class SimpleKeyListener extends KeyAdapter {
     private boolean specialKey(KeyEvent e) {
         return (e.getKeyCode() == KeyEvent.CHAR_UNDEFINED) || (e.isActionKey())
                 || (e.getKeyCode() == KeyEvent.VK_CONTROL) || (e.getKeyCode() == KeyEvent.VK_SHIFT)
-                || (e.getKeyCode() == KeyEvent.VK_ALT);
+                || (e.getKeyCode() == KeyEvent.VK_ALT) || (e.isControlDown());
     }
 }

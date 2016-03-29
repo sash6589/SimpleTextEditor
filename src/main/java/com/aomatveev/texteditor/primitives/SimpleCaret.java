@@ -59,6 +59,11 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         this.charIndex = charIndex;
     }
 
+    public void setPosition(SimpleCaret other) {
+        lineIndex = other.lineIndex;
+        charIndex = other.charIndex;
+    }
+
     public void updateAfterInsertChar() {
         charIndex += 1;
     }
