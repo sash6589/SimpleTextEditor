@@ -5,13 +5,19 @@ import com.aomatveev.texteditor.utilities.Loader;
 import com.aomatveev.texteditor.utilities.Saver;
 
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class MainActivity {
 
+    private static final int TOP_OFFSET = 12;
+    private static final int LEFT_OFFSET = 3;
+
     private static SimpleTextComponent simpleTextComponent;
+    private static JScrollPane scrollPane;
+    private static JMenuBar menuBar;
 
     private static JMenuItem newItem;
     private static JMenuItem openItem;
@@ -23,8 +29,13 @@ public class MainActivity {
         mainPanel.setLayout(new BorderLayout());
 
         simpleTextComponent = new SimpleTextComponent();
+        scrollPane = new JScrollPane(simpleTextComponent);
+        int top = TOP_OFFSET;
+        int left = LEFT_OFFSET;
+        int bottom = scrollPane.getHorizontalScrollBar().getHeight();
+        int right = scrollPane.getVerticalScrollBar().getWidth();
+        simpleTextComponent.setBorder(new EmptyBorder(top, left, bottom, right));
 
-        JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
         InputMap im = scrollPane.getInputMap(JComponent.WHEN_ANCESTOR_OF_FOCUSED_COMPONENT);
         im.put(KeyStroke.getKeyStroke("UP"), "none");
         im.put(KeyStroke.getKeyStroke("DOWN"), "none");
@@ -38,7 +49,7 @@ public class MainActivity {
     }
 
     private static void initMenuBar(JFrame frame) {
-        JMenuBar menuBar = new JMenuBar();
+        menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
 
         newItem = new JMenuItem("New");
@@ -87,13 +98,16 @@ public class MainActivity {
     private static void createAndShowGUI() {
         JFrame frame = new JFrame("Text editor");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
 
         initTextPanel(frame);
         initMenuBar(frame);
 
         frame.setBackground(Color.WHITE);
         frame.pack();
-        frame.setSize(new Dimension(1024, 768));
+//        int width = simpleTextComponent.getWidth() + scrollPane.getVerticalScrollBar().getWidth();
+//        int height = menuBar.getHeight() + simpleTextComponent.getHeight() + scrollPane.getHorizontalScrollBar().getHeight();
+//        System.out.println(width + " " + height);
         frame.setVisible(true);
     }
 
@@ -126,5 +140,3 @@ public class MainActivity {
         }
     }
 }
-
-

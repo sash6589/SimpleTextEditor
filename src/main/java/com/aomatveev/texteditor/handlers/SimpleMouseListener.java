@@ -6,9 +6,6 @@ import javafx.util.Pair;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.font.TextHitInfo;
-import java.awt.font.TextLayout;
-import java.util.List;
 
 public class SimpleMouseListener extends MouseAdapter {
 
@@ -22,14 +19,14 @@ public class SimpleMouseListener extends MouseAdapter {
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel, document);
+        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel);
         document.cancelSelect();
         document.moveCaret(position.getKey(), position.getValue());
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
-        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel, document);
+        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel);
         document.moveSelectedCaret(position.getKey(), position.getValue());
     }
 

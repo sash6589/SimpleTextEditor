@@ -18,7 +18,7 @@ public class SimpleMouseMotionListener extends MouseMotionAdapter {
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel, document);
+        Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel);
         document.moveSelectedCaret(position.getKey(), position.getValue());
     }
 }
