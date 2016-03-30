@@ -4,7 +4,7 @@
 
 1) `clone` this repository to `%local directory%`.
 
-2) `cd %local directory%/SimpleTextEditor` to local directory.
+2) `cd %local directory%/SimpleTextEditor`.
 
 3) `gradle build`
 
