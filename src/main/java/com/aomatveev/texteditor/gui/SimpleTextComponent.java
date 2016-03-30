@@ -30,6 +30,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private static final Color SELECT_COLOR = Color.orange;
     private static final Color TEXT_COLOR = Color.black;
+    private static final Color INSERT_MODE_CARET = Color.red;
 
     private int lineSpacing;
 
@@ -104,6 +105,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     }
 
     public void cut() {
+        document.copy();
         document.cut();
     }
 
@@ -149,8 +151,13 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         }
 
         if (caretLayout != null) {
-            origin = computeCaretOrigin(caretLayout);
+            origin = computeCaretOrigin();
             graphics2D.translate(origin.getX(), origin.getY());
+            if (document.isInsertMode()) {
+                graphics2D.setColor(INSERT_MODE_CARET);
+            } else {
+                graphics2D.setColor(TEXT_COLOR);
+            }
             Shape[] carets = caretLayout.getCaretShapes(currentCaret.charIndex);
             graphics2D.draw(carets[0]);
         }
@@ -166,7 +173,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     }
 
 
-    private Point2D.Float computeCaretOrigin(TextLayout layout) {
+    private Point2D.Float computeCaretOrigin() {
         Point2D.Float origin = computeLayoutOrigin();
         origin.y += lineSpacing * currentCaret.lineIndex;
         return origin;

@@ -16,6 +16,10 @@ public class SimpleKeyListener extends KeyAdapter {
 
     @Override
     public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_INSERT) {
+            document.setInsertMode();
+            return;
+        }
         if (e.getKeyCode() == KeyEvent.VK_ENTER) {
             if (document.isSelected()) {
                 document.cut();
@@ -28,6 +32,14 @@ public class SimpleKeyListener extends KeyAdapter {
                 document.cut();
             }
             else {
+                document.backspaceChar();
+            }
+            return;
+        }
+        if (e.getKeyCode() == KeyEvent.VK_DELETE) {
+            if (document.isSelected()) {
+                document.cut();
+            } else {
                 document.deleteChar();
             }
             return;

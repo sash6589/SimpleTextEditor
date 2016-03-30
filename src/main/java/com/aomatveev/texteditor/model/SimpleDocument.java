@@ -21,6 +21,7 @@ public class SimpleDocument {
     private SimpleCaret startSelectCaret;
     private int length;
     private boolean isSelected;
+    private boolean insertMode;
 
     public SimpleDocument(SimpleTextComponent viewModel) {
         this.viewModel = viewModel;
@@ -59,22 +60,32 @@ public class SimpleDocument {
         return length;
     }
 
+    public void setInsertMode() {
+        insertMode ^= true;
+        viewModel.updateView();
+    }
+
     public boolean isSelected() {
         return isSelected;
     }
 
+    public boolean isInsertMode() {
+        return insertMode;
+    }
+
     public void insertText(char c) {
-        lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
-        length += 1;
+        if ((insertMode) && (!currentCaret.atEndLine())) {
+            lines.get(currentCaret.lineIndex).setCharAt(currentCaret.charIndex, c);
+        } else {
+            lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
+            length += 1;
+        }
         currentCaret.updateAfterInsertChar();
         viewModel.updateView();
     }
 
     public void insertText(String text) {
         String[] parts = text.split("\n");
-        if (text.charAt(0) == '\n') {
-            insertNewLine();
-        }
         for (int i = 0; i < parts.length; ++i) {
             insertLine(parts[i]);
             if (i < parts.length - 1) {
@@ -84,13 +95,6 @@ public class SimpleDocument {
         if (text.charAt(text.length() - 1) == '\n') {
             insertNewLine();
         }
-        viewModel.updateView();
-    }
-
-    public void insertLine(String text) {
-        lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, text);
-        length += text.length();
-        currentCaret.updateAfterInsertText(text);
         viewModel.updateView();
     }
 
@@ -109,35 +113,46 @@ public class SimpleDocument {
         insertText(text);
     }
 
-    public void deleteChar() {
+    public void backspaceChar() {
         if (!currentCaret.atBeginningFile()) {
             if (currentCaret.atBeginningLine()) {
-                StringBuilder line = lines.get(currentCaret.lineIndex);
-                int lineLength = lineLength(currentCaret.lineIndex - 1);
-                lines.get(currentCaret.lineIndex - 1).append(line);
-                lines.remove(currentCaret.lineIndex);
-                currentCaret.updateAfterDeleteLine(lineLength);
+                backspaceLine();
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex - 1);
+                length -= 1;
                 currentCaret.updateAfterDeleteChar();
             }
-            length -= 1;
             viewModel.updateView();
         }
     }
 
-    public void paste(){
-        String text = "";
-        try {
-            text = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
-        } catch (UnsupportedFlavorException | IOException e) {
-            e.printStackTrace();
+    public void deleteChar() {
+        if (!currentCaret.atEndFile()) {
+            if (currentCaret.atEndLine()) {
+                currentCaret.moveToNextLine();
+                backspaceLine();
+            } else {
+                lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex);
+                length -=1;
+            }
+            viewModel.updateView();
         }
-        insertText(text);
-        viewModel.updateView();
+    }
+
+    public void paste() {
+        try {
+            String text = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
+            insertText(text);
+            viewModel.updateView();
+        } catch (UnsupportedFlavorException | IOException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public void copy() {
+        if (!isSelected) {
+            return;
+        }
         String text = getSelectedText();
         StringSelection stringSelection = new StringSelection(text);
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
@@ -238,16 +253,6 @@ public class SimpleDocument {
         viewModel.updateView();
     }
 
-    public void moveCaretToWord(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            currentCaret.moveToPrevWord();
-        }
-        if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            currentCaret.moveToNextWord();
-        }
-        viewModel.updateView();
-    }
-
     public void moveSelectedCaret(KeyEvent e) {
         if (!isSelected) {
             isSelected = true;
@@ -281,6 +286,7 @@ public class SimpleDocument {
     private void init() {
         isSelected = false;
         startSelectCaret = null;
+        insertMode = false;
         initLines();
         initCaret();
     }
@@ -337,4 +343,21 @@ public class SimpleDocument {
         res.append(lines.get(first.lineIndex).substring(first.charIndex, second.charIndex));
         return res.toString();
     }
+
+    private void insertLine(String text) {
+        lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, text);
+        length += text.length();
+        currentCaret.updateAfterInsertText(text);
+        viewModel.updateView();
+    }
+
+    private void backspaceLine() {
+        StringBuilder line = lines.get(currentCaret.lineIndex);
+        int lineLength = lineLength(currentCaret.lineIndex - 1);
+        lines.get(currentCaret.lineIndex - 1).append(line);
+        lines.remove(currentCaret.lineIndex);
+        currentCaret.updateAfterDeleteLine(lineLength);
+        length -= 1;
+    }
+
 }

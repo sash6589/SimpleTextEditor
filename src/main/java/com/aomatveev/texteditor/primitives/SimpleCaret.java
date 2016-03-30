@@ -167,6 +167,14 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex = document.lineLength(lineIndex);
     }
 
+    public void moveToNextLine() {
+        if (atEndFile()) {
+            return;
+        }
+        lineIndex += 1;
+        charIndex = 0;
+    }
+
     @Override
     public int compareTo(SimpleCaret o) {
         if (lineIndex == o.lineIndex) {

@@ -17,8 +17,6 @@ public class MainActivity {
     private static final int LEFT_OFFSET = 3;
 
     private static SimpleTextComponent simpleTextComponent;
-    private static JScrollPane scrollPane;
-    private static JMenuBar menuBar;
 
     private static JMenuItem newItem;
     private static JMenuItem openItem;
@@ -35,7 +33,7 @@ public class MainActivity {
         mainPanel.setLayout(new BorderLayout());
 
         simpleTextComponent = new SimpleTextComponent();
-        scrollPane = new JScrollPane(simpleTextComponent);
+        JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
         int top = TOP_OFFSET;
         int left = LEFT_OFFSET;
         int bottom = scrollPane.getHorizontalScrollBar().getHeight();
@@ -55,7 +53,7 @@ public class MainActivity {
     }
 
     private static void initMenuBar(JFrame frame) {
-        menuBar = new JMenuBar();
+        JMenuBar menuBar = new JMenuBar();
         JMenu fileMenu = new JMenu("File");
 
         newItem = new JMenuItem("New");
