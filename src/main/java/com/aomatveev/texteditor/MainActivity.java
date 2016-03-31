@@ -1,6 +1,10 @@
 package com.aomatveev.texteditor;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
+import com.aomatveev.texteditor.primitives.Constants;
+import com.aomatveev.texteditor.syntax.DefaultSyntaxHighlighter;
+import com.aomatveev.texteditor.syntax.JavaSyntaxHighlighter;
+import com.aomatveev.texteditor.syntax.JavascriptSyntaxHighlighter;
 import com.aomatveev.texteditor.utilities.Loader;
 import com.aomatveev.texteditor.utilities.Saver;
 
@@ -13,9 +17,6 @@ import java.awt.event.KeyEvent;
 
 public class MainActivity {
 
-    private static final int TOP_OFFSET = 12;
-    private static final int LEFT_OFFSET = 3;
-
     private static SimpleTextComponent simpleTextComponent;
 
     private static JMenuItem newItem;
@@ -26,7 +27,11 @@ public class MainActivity {
     private static JMenuItem pasteItem;
     private static JMenuItem copyItem;
     private static JMenuItem cutItem;
-    private static JMenuItem selectAll;
+    private static JMenuItem selectAllItem;
+
+    private static JMenuItem noneItem;
+    private static JMenuItem javaItem;
+    private static JMenuItem javascriptItem;
 
     private static void initTextPanel(JFrame frame) {
         JPanel mainPanel = new JPanel();
@@ -34,8 +39,8 @@ public class MainActivity {
 
         simpleTextComponent = new SimpleTextComponent();
         JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
-        int top = TOP_OFFSET;
-        int left = LEFT_OFFSET;
+        int top = Constants.TOP_OFFSET;
+        int left = Constants.LEFT_OFFSET;
         int bottom = scrollPane.getHorizontalScrollBar().getHeight();
         int right = scrollPane.getVerticalScrollBar().getWidth();
         simpleTextComponent.setBorder(new EmptyBorder(top, left, bottom, right));
@@ -66,11 +71,18 @@ public class MainActivity {
         pasteItem = new JMenuItem("Paste");
         copyItem = new JMenuItem("Copy");
         cutItem = new JMenuItem("Cut");
-        selectAll = new JMenuItem("Select All");
+        selectAllItem = new JMenuItem("Select All");
+
+        JMenu syntaxMenu = new JMenu("Syntax");
+
+        noneItem = new JMenuItem("None");
+        javaItem = new JMenuItem("Java");
+        javascriptItem = new JMenuItem("Javascript");
 
         frame.setJMenuBar(menuBar);
         menuBar.add(fileMenu);
         menuBar.add(editMenu);
+        menuBar.add(syntaxMenu);
 
         fileMenu.add(newItem);
         fileMenu.add(openItem);
@@ -80,7 +92,11 @@ public class MainActivity {
         editMenu.add(pasteItem);
         editMenu.add(copyItem);
         editMenu.add(cutItem);
-        editMenu.add(selectAll);
+        editMenu.add(selectAllItem);
+
+        syntaxMenu.add(noneItem);
+        syntaxMenu.add(javaItem);
+        syntaxMenu.add(javascriptItem);
 
         newItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_N, ActionEvent.CTRL_MASK));
         openItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_L, ActionEvent.CTRL_MASK));
@@ -88,7 +104,7 @@ public class MainActivity {
         pasteItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK));
         copyItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK));
         cutItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_X, ActionEvent.CTRL_MASK));
-        selectAll.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ActionEvent.CTRL_MASK));
+        selectAllItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_A, ActionEvent.CTRL_MASK));
 
         ActionListener listener = new SimpleActionListener();
         newItem.addActionListener(listener);
@@ -98,7 +114,10 @@ public class MainActivity {
         pasteItem.addActionListener(listener);
         copyItem.addActionListener(listener);
         cutItem.addActionListener(listener);
-        selectAll.addActionListener(listener);
+        selectAllItem.addActionListener(listener);
+        noneItem.addActionListener(listener);
+        javaItem.addActionListener(listener);
+        javascriptItem.addActionListener(listener);
     }
 
     private static void newFile() {
@@ -138,6 +157,18 @@ public class MainActivity {
 
     private static void selectAll() {
         simpleTextComponent.selectAll();
+    }
+
+    private static void noneSyntax() {
+        simpleTextComponent.setSyntaxHighlighter(new DefaultSyntaxHighlighter());
+    }
+
+    private static void javaSyntax() {
+        simpleTextComponent.setSyntaxHighlighter(new JavaSyntaxHighlighter());
+    }
+
+    private static void javascriptSyntax() {
+        simpleTextComponent.setSyntaxHighlighter(new JavascriptSyntaxHighlighter());
     }
 
     private static void createAndShowGUI() {
@@ -191,9 +222,20 @@ public class MainActivity {
                 cut();
                 return;
             }
-            if (choice == selectAll) {
+            if (choice == selectAllItem) {
                 selectAll();
                 return;
+            }
+            if (choice == noneItem) {
+                noneSyntax();
+                return;
+            }
+            if (choice == javaItem) {
+                javaSyntax();
+                return;
+            }
+            if (choice == javascriptItem) {
+                javascriptSyntax();
             }
         }
     }
