@@ -1,10 +1,10 @@
 package com.aomatveev.texteditor;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
-import com.aomatveev.texteditor.primitives.Constants;
-import com.aomatveev.texteditor.syntax.DefaultSyntaxHighlighter;
-import com.aomatveev.texteditor.syntax.JavaSyntaxHighlighter;
-import com.aomatveev.texteditor.syntax.JavascriptSyntaxHighlighter;
+import com.aomatveev.texteditor.utilities.Utilities;
+import com.aomatveev.texteditor.syntax.NoneSyntax;
+import com.aomatveev.texteditor.syntax.JavaSyntax;
+import com.aomatveev.texteditor.syntax.JavascriptSyntax;
 import com.aomatveev.texteditor.utilities.Loader;
 import com.aomatveev.texteditor.utilities.Saver;
 
@@ -39,8 +39,8 @@ public class MainActivity {
 
         simpleTextComponent = new SimpleTextComponent();
         JScrollPane scrollPane = new JScrollPane(simpleTextComponent);
-        int top = Constants.TOP_OFFSET;
-        int left = Constants.LEFT_OFFSET;
+        int top = Utilities.TOP_OFFSET;
+        int left = Utilities.LEFT_OFFSET;
         int bottom = scrollPane.getHorizontalScrollBar().getHeight();
         int right = scrollPane.getVerticalScrollBar().getWidth();
         simpleTextComponent.setBorder(new EmptyBorder(top, left, bottom, right));
@@ -160,15 +160,15 @@ public class MainActivity {
     }
 
     private static void noneSyntax() {
-        simpleTextComponent.setSyntaxHighlighter(new DefaultSyntaxHighlighter());
+        simpleTextComponent.setSyntax(new NoneSyntax());
     }
 
     private static void javaSyntax() {
-        simpleTextComponent.setSyntaxHighlighter(new JavaSyntaxHighlighter());
+        simpleTextComponent.setSyntax(new JavaSyntax());
     }
 
     private static void javascriptSyntax() {
-        simpleTextComponent.setSyntaxHighlighter(new JavascriptSyntaxHighlighter());
+        simpleTextComponent.setSyntax(new JavascriptSyntax());
     }
 
     private static void createAndShowGUI() {

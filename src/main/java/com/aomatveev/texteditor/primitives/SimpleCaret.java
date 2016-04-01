@@ -1,6 +1,7 @@
 package com.aomatveev.texteditor.primitives;
 
 import com.aomatveev.texteditor.model.SimpleDocument;
+import com.aomatveev.texteditor.utilities.Utilities;
 
 public class SimpleCaret implements Comparable<SimpleCaret> {
     public int lineIndex;
@@ -173,6 +174,13 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         }
         lineIndex += 1;
         charIndex = 0;
+    }
+
+    public Character getSymbol() {
+        if (charIndex == document.lineLength(lineIndex)) {
+            return null;
+        }
+        return document.getLine(lineIndex).charAt(charIndex);
     }
 
     @Override

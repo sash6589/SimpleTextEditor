@@ -4,10 +4,10 @@ import com.aomatveev.texteditor.handlers.SimpleKeyListener;
 import com.aomatveev.texteditor.handlers.SimpleMouseListener;
 import com.aomatveev.texteditor.handlers.SimpleMouseMotionListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
-import com.aomatveev.texteditor.primitives.Constants;
+import com.aomatveev.texteditor.utilities.Utilities;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
-import com.aomatveev.texteditor.syntax.DefaultSyntaxHighlighter;
-import com.aomatveev.texteditor.syntax.SyntaxHighlighter;
+import com.aomatveev.texteditor.syntax.AbstractSyntax;
+import com.aomatveev.texteditor.syntax.NoneSyntax;
 import javafx.util.Pair;
 
 import javax.swing.*;
@@ -28,7 +28,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     public SimpleTextComponent() {
         document = new SimpleDocument(this);
         currentCaret = document.getCurrentCaret();
-        syntaxHighlighter = new DefaultSyntaxHighlighter();
+        syntaxHighlighter = new SyntaxHighlighter(document);
+        setSyntax(new NoneSyntax());
         preferredScrollableViewportSize = new Dimension();
         initLineSpacing();
         setBackground(Color.WHITE);
@@ -66,10 +67,10 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     public TextLayout getTextLayout(int lineIndex) {
         if (lineIndex >= document.linesSize()) {
-            return Constants.defaultTextLayout;
+            return Utilities.defaultTextLayout;
         }
         StringBuilder line = document.getLine(lineIndex);
-        return syntaxHighlighter.highlightSyntax(line.toString());
+        return syntaxHighlighter.highlightSyntax(line.toString(), lineIndex);
     }
 
     public void paste() {
@@ -89,8 +90,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         document.selectAll();
     }
 
-    public void setSyntaxHighlighter(SyntaxHighlighter h) {
-        syntaxHighlighter = h;
+    public void setSyntax(AbstractSyntax syntax) {
+        document.setSyntax(syntax);
         updateView();
     }
 
@@ -112,11 +113,11 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                         Shape base = layout.getLogicalHighlightShape(bounds.getKey(), bounds.getValue());
                         AffineTransform at = AffineTransform.getTranslateInstance(origin.getX(), origin.getY());
                         Shape highlight = at.createTransformedShape(base);
-                        graphics2D.setColor(Constants.SELECT_COLOR);
+                        graphics2D.setColor(Utilities.SELECT_COLOR);
                         graphics2D.fill(highlight);
                     }
                 }
-                graphics2D.setColor(Constants.TEXT_COLOR);
+                graphics2D.setColor(Utilities.TEXT_COLOR);
                 layout.draw(graphics2D, (float) origin.getX(), (float) origin.getY());
                 if (i == currentCaret.lineIndex) {
                     caretLayout = layout;
@@ -129,9 +130,9 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
             origin = computeCaretOrigin();
             graphics2D.translate(origin.getX(), origin.getY());
             if (document.isInsertMode()) {
-                graphics2D.setColor(Constants.INSERT_MODE_CARET);
+                graphics2D.setColor(Utilities.INSERT_MODE_CARET);
             } else {
-                graphics2D.setColor(Constants.TEXT_COLOR);
+                graphics2D.setColor(Utilities.TEXT_COLOR);
             }
             Shape[] carets = caretLayout.getCaretShapes(currentCaret.charIndex);
             graphics2D.draw(carets[0]);
@@ -155,7 +156,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     }
 
     private void initLineSpacing() {
-        lineSpacing = ((int) (Constants.defaultTextLayout.getAscent() + Constants.defaultTextLayout.getDescent())) + 1;
+        lineSpacing = ((int) (Utilities.defaultTextLayout.getAscent() + Utilities.defaultTextLayout.getDescent())) + 1;
     }
 
     private Dimension computeDimension() {
@@ -170,7 +171,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         }
 
         int left = ((EmptyBorder) getBorder()).getBorderInsets().left;
-        int width = left + (maxLen * Constants.CHARACTER_WIDTH);
+        int width = left + (maxLen * Utilities.CHARACTER_WIDTH);
         Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         preferredScrollableViewportSize.setSize(Math.max(screenSize.getWidth(), width), Math.max(screenSize.getHeight(), height));
 
@@ -198,7 +199,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     @Override
     public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
         if (orientation == SwingConstants.HORIZONTAL) {
-            return Constants.CHARACTER_WIDTH;
+            return Utilities.CHARACTER_WIDTH;
         } else {
             return lineSpacing;
         }

@@ -2,6 +2,9 @@ package com.aomatveev.texteditor.model;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
+import com.aomatveev.texteditor.syntax.AbstractSyntax;
+import com.aomatveev.texteditor.syntax.NoneSyntax;
+import com.aomatveev.texteditor.utilities.Utilities;
 import javafx.util.Pair;
 
 import java.awt.*;
@@ -17,11 +20,15 @@ import java.util.List;
 public class SimpleDocument {
     private SimpleTextComponent viewModel;
     private List<StringBuilder> lines;
+    private List<Integer> matchingBracket;
+    private List<Integer> lineCommentIndex;
     private SimpleCaret currentCaret;
     private SimpleCaret startSelectCaret;
+    private AbstractSyntax syntax;
     private int length;
     private boolean isSelected;
     private boolean insertMode;
+    private int matchingBracketLine;
 
     public SimpleDocument(SimpleTextComponent viewModel) {
         this.viewModel = viewModel;
@@ -48,6 +55,18 @@ public class SimpleDocument {
         return lines.get(index);
     }
 
+    public AbstractSyntax getSyntax() {
+        return syntax;
+    }
+
+    public List<Integer> getMatchingBracket() {
+        return matchingBracket;
+    }
+
+    public List<Integer> getLineCommentIndex() {
+        return lineCommentIndex;
+    }
+
     public int lineLength(int lineIndex) {
         return lines.get(lineIndex).length();
     }
@@ -58,6 +77,11 @@ public class SimpleDocument {
 
     public int length() {
         return length;
+    }
+
+    public void setSyntax(AbstractSyntax syntax) {
+        resetSyntaxObjects();
+        this.syntax = syntax;
     }
 
     public void setInsertMode() {
@@ -74,6 +98,8 @@ public class SimpleDocument {
     }
 
     public void insertText(char c) {
+        resetMatchingBracket();
+        resetComment();
         if ((insertMode) && (!currentCaret.atEndLine())) {
             lines.get(currentCaret.lineIndex).setCharAt(currentCaret.charIndex, c);
         } else {
@@ -81,30 +107,24 @@ public class SimpleDocument {
             length += 1;
         }
         currentCaret.updateAfterInsertChar();
-        viewModel.updateView();
-    }
-
-    public void insertText(String text) {
-        String[] parts = text.split("\n");
-        for (int i = 0; i < parts.length; ++i) {
-            insertLine(parts[i]);
-            if (i < parts.length - 1) {
-                insertNewLine();
-            }
-        }
-        if (text.charAt(text.length() - 1) == '\n') {
-            insertNewLine();
-        }
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
     public void insertNewLine() {
+        resetMatchingBracket();
+        resetComment();
         StringBuilder rest = new StringBuilder("");
         rest.append(getLine(currentCaret.lineIndex).substring(currentCaret.charIndex));
         getLine(currentCaret.lineIndex).delete(currentCaret.charIndex, lineLength(currentCaret.lineIndex));
         lines.add(currentCaret.lineIndex + 1, rest);
+        matchingBracket.add(-1);
+        lineCommentIndex.add(-1);
         length += 1;
         currentCaret.updateAfterInsertNewline();
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
@@ -115,6 +135,8 @@ public class SimpleDocument {
 
     public void backspaceChar() {
         if (!currentCaret.atBeginningFile()) {
+            resetMatchingBracket();
+            resetComment();
             if (currentCaret.atBeginningLine()) {
                 backspaceLine();
             } else {
@@ -122,27 +144,40 @@ public class SimpleDocument {
                 length -= 1;
                 currentCaret.updateAfterDeleteChar();
             }
+            checkIfBracket();
+            checkIfComment();
             viewModel.updateView();
         }
     }
 
     public void deleteChar() {
         if (!currentCaret.atEndFile()) {
+            resetMatchingBracket();
+            resetComment();
             if (currentCaret.atEndLine()) {
                 currentCaret.moveToNextLine();
                 backspaceLine();
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex);
-                length -=1;
+                length -= 1;
             }
+            checkIfBracket();
+            checkIfComment();
             viewModel.updateView();
         }
     }
 
     public void paste() {
+        if (isSelected) {
+            cut();
+        }
+        resetMatchingBracket();
+        resetComment();
         try {
             String text = (String) Toolkit.getDefaultToolkit().getSystemClipboard().getData(DataFlavor.stringFlavor);
             insertText(text);
+            checkIfBracket();
+            checkIfComment();
             viewModel.updateView();
         } catch (UnsupportedFlavorException | IOException e) {
             System.out.println(e.getMessage());
@@ -163,6 +198,8 @@ public class SimpleDocument {
         if (!isSelected) {
             return;
         }
+        resetMatchingBracket();
+        resetComment();
         Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
         SimpleCaret first = bounds.getKey();
         SimpleCaret second = bounds.getValue();
@@ -172,7 +209,15 @@ public class SimpleDocument {
         lines.get(first.lineIndex).delete(first.charIndex, second.charIndex);
         length -= second.charIndex - first.charIndex;
         currentCaret.setPosition(first);
+        if (matchingBracket.get(first.lineIndex) >= first.charIndex) {
+            matchingBracket.set(first.lineIndex, -1);
+        }
+        if (lineCommentIndex.get(first.lineIndex) >= first.charIndex) {
+            lineCommentIndex.set(first.lineIndex, -1);
+        }
         cancelSelect();
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
@@ -180,6 +225,7 @@ public class SimpleDocument {
         isSelected = true;
         startSelectCaret = new SimpleCaret(this, 0, 0);
         currentCaret.moveToEndFile();
+
         viewModel.updateView();
     }
 
@@ -208,6 +254,8 @@ public class SimpleDocument {
     }
 
     public void moveCaret(KeyEvent e) {
+        resetMatchingBracket();
+        resetComment();
         if (e.isControlDown()) {
             if (e.getKeyCode() == KeyEvent.VK_LEFT) {
                 currentCaret.moveToPrevWord();
@@ -236,13 +284,19 @@ public class SimpleDocument {
         if (e.getKeyCode() == KeyEvent.VK_HOME) {
             currentCaret.moveStartLine();
         }
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
     public void moveCaret(int lineIndex, int charIndex) {
+        resetMatchingBracket();
+        resetComment();
         if (lineIndex == linesSize()) {
             if (lineLength(lineIndex - 1) > 0) {
                 lines.add(new StringBuilder(""));
+                matchingBracket.add(-1);
+                lineCommentIndex.add(-1);
                 length += 1;
             } else {
                 lineIndex -= 1;
@@ -250,6 +304,8 @@ public class SimpleDocument {
         }
         charIndex = Math.min(lineLength(lineIndex), charIndex);
         currentCaret.setPosition(lineIndex, charIndex);
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
@@ -287,20 +343,30 @@ public class SimpleDocument {
         isSelected = false;
         startSelectCaret = null;
         insertMode = false;
+        matchingBracketLine = -1;
+        syntax = new NoneSyntax();
         initLines();
         initCaret();
     }
 
     private void initLines() {
         lines = new ArrayList<>();
+        matchingBracket = new ArrayList<>();
+        lineCommentIndex = new ArrayList<>();
         lines.add(new StringBuilder(""));
+        matchingBracket.add(-1);
+        lineCommentIndex.add(-1);
     }
 
     private void initLines(String textData) {
         String[] items = textData.split("\n");
         lines = new ArrayList<>();
+        matchingBracket = new ArrayList<>();
+        lineCommentIndex = new ArrayList<>();
         for (String item : items) {
             lines.add(new StringBuilder(item));
+            matchingBracket.add(-1);
+            lineCommentIndex.add(-1);
         }
     }
 
@@ -327,6 +393,8 @@ public class SimpleDocument {
         StringBuilder rest = new StringBuilder(getLine(caret.lineIndex).substring(caret.charIndex));
         lines.get(caret.lineIndex - 1).append(rest);
         lines.remove(caret.lineIndex);
+        matchingBracket.remove(caret.lineIndex);
+        lineCommentIndex.remove(caret.lineIndex);
         caret.setPosition(caret.lineIndex - 1, newCharIndex);
     }
 
@@ -344,20 +412,184 @@ public class SimpleDocument {
         return res.toString();
     }
 
+    private void insertText(String text) {
+        resetMatchingBracket();
+        resetComment();
+        String[] parts = text.split("\n");
+        for (int i = 0; i < parts.length; ++i) {
+            insertLine(parts[i]);
+            if (i < parts.length - 1) {
+                insertNewLine();
+            }
+        }
+        if (text.charAt(text.length() - 1) == '\n') {
+            insertNewLine();
+        }
+        checkIfBracket();
+        checkIfComment();
+        viewModel.updateView();
+    }
+
+
     private void insertLine(String text) {
+        resetMatchingBracket();
+        resetComment();
         lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, text);
         length += text.length();
         currentCaret.updateAfterInsertText(text);
+        checkIfBracket();
+        checkIfComment();
         viewModel.updateView();
     }
 
     private void backspaceLine() {
+        resetMatchingBracket();
+        resetComment();
         StringBuilder line = lines.get(currentCaret.lineIndex);
         int lineLength = lineLength(currentCaret.lineIndex - 1);
         lines.get(currentCaret.lineIndex - 1).append(line);
         lines.remove(currentCaret.lineIndex);
+        matchingBracket.remove(currentCaret.lineIndex);
+        lineCommentIndex.remove(currentCaret.lineIndex);
         currentCaret.updateAfterDeleteLine(lineLength);
+        checkIfBracket();
+        checkIfComment();
         length -= 1;
     }
 
+    private void resetSyntaxObjects() {
+        for (int i = 0; i < linesSize(); ++i) {
+            matchingBracket.set(i, -1);
+            lineCommentIndex.set(i, -1);
+            checkIfComment(i);
+        }
+    }
+
+    private void checkIfBracket() {
+        Character c = currentCaret.getSymbol();
+        if (isCharCommented(currentCaret.lineIndex, currentCaret.charIndex)) return;
+        if (c != null) {
+            if (Utilities.isBracket(c)) {
+                findMatchingBracket();
+            }
+        }
+    }
+
+    private void findMatchingBracket() {
+        char bracketChar = currentCaret.getSymbol();
+        char matchingBracketChar = Utilities.matchingBracket(bracketChar);
+        if (Utilities.isOpenBracket(bracketChar)) {
+            findCloseBracket(bracketChar, matchingBracketChar);
+        } else {
+            findOpenBracket(bracketChar, matchingBracketChar);
+        }
+    }
+
+    private void findCloseBracket(char bracketChar, char matchingBracketChar) {
+        int lineIndex = currentCaret.lineIndex;
+        int charIndex = currentCaret.charIndex;
+        int balance = 1;
+        for (int i = charIndex + 1; i < lineLength(lineIndex); ++i) {
+            if (isCharCommented(lineIndex, i)) continue;
+            if (getLine(lineIndex).charAt(i) == bracketChar) balance += 1;
+            if (getLine(lineIndex).charAt(i) == matchingBracketChar) balance -= 1;
+            if (balance == 0) {
+                matchingBracket.set(lineIndex, i);
+                matchingBracketLine = lineIndex;
+                return;
+            }
+        }
+        for (int i = lineIndex + 1; i < linesSize(); ++i) {
+            for (int j = 0; j < lineLength(i); ++j) {
+                if (isCharCommented(i, j)) continue;
+                if (getLine(i).charAt(j) == bracketChar) balance += 1;
+                if (getLine(i).charAt(j) == matchingBracketChar) balance -= 1;
+                if (balance == 0) {
+                    matchingBracket.set(i, j);
+                    matchingBracketLine = i;
+                    return;
+                }
+            }
+        }
+    }
+
+    private void findOpenBracket(char bracketChar, char matchingBracketChar) {
+        int lineIndex = currentCaret.lineIndex;
+        int charIndex = currentCaret.charIndex;
+        int balance = 1;
+        for (int i = charIndex - 1; i >= 0; i--) {
+            if (isCharCommented(lineIndex, i)) continue;
+            if (getLine(lineIndex).charAt(i) == bracketChar) balance += 1;
+            if (getLine(lineIndex).charAt(i) == matchingBracketChar) balance -= 1;
+            if (balance == 0) {
+                matchingBracket.set(lineIndex, i);
+                matchingBracketLine = lineIndex;
+                return;
+            }
+        }
+        for (int i = lineIndex - 1; i >= 0; --i) {
+            for (int j = lineLength(i) - 1; j >= 0; --j) {
+                if (isCharCommented(i, j)) continue;
+                if (getLine(i).charAt(j) == bracketChar) balance += 1;
+                if (getLine(i).charAt(j) == matchingBracketChar) balance -= 1;
+                if (balance == 0) {
+                    matchingBracket.set(i, j);
+                    matchingBracketLine = i;
+                    return;
+                }
+            }
+        }
+    }
+
+    private void resetMatchingBracket() {
+        matchingBracket.set(currentCaret.lineIndex, -1);
+        if (matchingBracketLine != -1) {
+            matchingBracket.set(matchingBracketLine, -1);
+        }
+        matchingBracketLine = -1;
+    }
+
+    private void checkIfComment() {
+        String commentString = syntax.LINE_COMMENT_IDENTIFIER;
+        if (commentString == null) return;
+        int index = getLine(currentCaret.lineIndex).indexOf(commentString);
+        if (index != -1) {
+            setLineComment(index);
+        }
+    }
+
+    private void checkIfComment(int lineIndex) {
+        String commentString = syntax.LINE_COMMENT_IDENTIFIER;
+        if (commentString == null) return;
+        int index = getLine(lineIndex).indexOf(commentString);
+        if (index != -1) {
+            setLineComment(lineIndex, index);
+        }
+    }
+
+    private void setLineComment(int index) {
+        lineCommentIndex.set(currentCaret.lineIndex, index);
+    }
+
+    private void setLineComment(int lineIndex, int index) {
+        lineCommentIndex.set(lineIndex, index);
+    }
+
+    private void resetComment() {
+        resetLineComment();
+    }
+
+    private void resetLineComment() {
+        String commentString = syntax.LINE_COMMENT_IDENTIFIER;
+        if (commentString == null) return;
+        int index = getLine(currentCaret.lineIndex).indexOf(commentString);
+        if (index == -1) {
+            lineCommentIndex.set(currentCaret.lineIndex, -1);
+        }
+    }
+
+    private boolean isCharCommented(int lineIndex, int charIndex) {
+        int index = getLineCommentIndex().get(lineIndex);
+        return index != -1 && charIndex >= index;
+    }
 }
