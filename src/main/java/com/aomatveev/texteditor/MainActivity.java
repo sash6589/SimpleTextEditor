@@ -1,6 +1,7 @@
 package com.aomatveev.texteditor;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
+import com.aomatveev.texteditor.syntax.AbstractSyntax;
 import com.aomatveev.texteditor.utilities.Utilities;
 import com.aomatveev.texteditor.syntax.NoneSyntax;
 import com.aomatveev.texteditor.syntax.JavaSyntax;
@@ -8,14 +9,20 @@ import com.aomatveev.texteditor.syntax.JavascriptSyntax;
 import com.aomatveev.texteditor.utilities.Loader;
 import com.aomatveev.texteditor.utilities.Saver;
 
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity {
+
+    private static Map<String, String> syntaxes;
 
     private static SimpleTextComponent simpleTextComponent;
 
@@ -32,6 +39,8 @@ public class MainActivity {
     private static JMenuItem noneItem;
     private static JMenuItem javaItem;
     private static JMenuItem javascriptItem;
+
+    private static String noneSyntaxName = NoneSyntax.class.getName();
 
     private static void initTextPanel(JFrame frame) {
         JPanel mainPanel = new JPanel();
@@ -128,6 +137,7 @@ public class MainActivity {
         JFileChooser fileChooser = new JFileChooser();
         if (fileChooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             newFile();
+            detectAndSetSyntax(fileChooser.getSelectedFile());
             new Loader(fileChooser.getSelectedFile(), simpleTextComponent).execute();
         }
     }
@@ -135,6 +145,7 @@ public class MainActivity {
     private static void saveFile() {
         JFileChooser fileChooser = new JFileChooser();
         if (fileChooser.showSaveDialog(null) == JFileChooser.APPROVE_OPTION) {
+            detectAndSetSyntax(fileChooser.getSelectedFile());
             new Saver(fileChooser.getSelectedFile(), simpleTextComponent.getText()).execute();
         }
     }
@@ -172,6 +183,8 @@ public class MainActivity {
     }
 
     private static void createAndShowGUI() {
+        initSyntaxes();
+
         JFrame frame = new JFrame("Text editor");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -182,6 +195,26 @@ public class MainActivity {
         frame.setBackground(Color.WHITE);
         frame.pack();
         frame.setVisible(true);
+    }
+
+    private static void initSyntaxes() {
+        syntaxes = new HashMap<>();
+        syntaxes.put("java", JavaSyntax.class.getName());
+        syntaxes.put("js", JavascriptSyntax.class.getName());
+    }
+
+    private static void detectAndSetSyntax(File file) {
+        String fileName = file.getName();
+        int index = fileName.lastIndexOf('.');
+        if (index == -1) {
+            simpleTextComponent.setSyntax(new NoneSyntax());
+        }
+        String className = syntaxes.getOrDefault(fileName.substring(index + 1), noneSyntaxName);
+        try {
+            simpleTextComponent.setSyntax((AbstractSyntax) Class.forName(className).newInstance());
+        } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
     }
 
     public static void main(String[] args) {

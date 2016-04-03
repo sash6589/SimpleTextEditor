@@ -3,6 +3,7 @@ package com.aomatveev.texteditor.gui;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 import com.aomatveev.texteditor.utilities.Utilities;
+import javafx.util.Pair;
 
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
@@ -91,6 +92,13 @@ public class SyntaxHighlighter {
         if (index != -1) {
             coloredString.addAttribute(TextAttribute.FOREGROUND, Utilities.COMMENT_COLOR, index,
                     document.lineLength(lineIndex));
+        }
+        List<Pair<Integer, Integer>> pairs = document.getTextCommentIndex().get(lineIndex);
+        for (Pair<Integer, Integer> pair : pairs) {
+            if (pair.getKey() < pair.getValue()) {
+                coloredString.addAttribute(TextAttribute.FOREGROUND, Utilities.COMMENT_COLOR, pair.getKey(),
+                        pair.getValue());
+            }
         }
     }
 }

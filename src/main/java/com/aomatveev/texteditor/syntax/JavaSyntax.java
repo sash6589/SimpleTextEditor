@@ -17,6 +17,8 @@ public class JavaSyntax extends AbstractSyntax {
     @Override
     protected void initCommentIdentifiers() {
         LINE_COMMENT_IDENTIFIER = "//";
+        OPEN_TEXT_COMMENT_IDENTIFIER = "/*";
+        CLOSE_TEXT_COMMENT_IDENTIFIER = "*/";
     }
 
     @Override

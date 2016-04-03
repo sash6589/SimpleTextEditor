@@ -1,19 +1,12 @@
 package com.aomatveev.texteditor.primitives;
 
 import com.aomatveev.texteditor.model.SimpleDocument;
-import com.aomatveev.texteditor.utilities.Utilities;
 
 public class SimpleCaret implements Comparable<SimpleCaret> {
     public int lineIndex;
     public int charIndex;
 
     private SimpleDocument document;
-
-    public SimpleCaret(SimpleDocument document) {
-        this.document = document;
-        lineIndex = 0;
-        charIndex = 0;
-    }
 
     public SimpleCaret(SimpleDocument document, int lineIndex, int charIndex) {
         this.document = document;
@@ -25,10 +18,6 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         this.document = other.getDocument();
         lineIndex = other.lineIndex;
         charIndex = other.charIndex;
-    }
-
-    public SimpleDocument getDocument() {
-        return document;
     }
 
     public boolean atBeginningFile() {
@@ -189,5 +178,9 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
             return new Integer(charIndex).compareTo(o.charIndex);
         }
         return new Integer(lineIndex).compareTo(o.lineIndex);
+    }
+
+    private SimpleDocument getDocument() {
+        return document;
     }
 }

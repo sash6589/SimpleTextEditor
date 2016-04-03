@@ -18,7 +18,7 @@ public class Utilities {
     public static final Color TEXT_COLOR = Color.black;
     public static final Color KEYWORD_COLOR = Color.blue;
     public static final Color INSERT_MODE_CARET = Color.red;
-    public static final Color BRACKET_COLOR = Color.yellow;
+    public static final Color BRACKET_COLOR = new Color(255, 69, 0);
     public static final Color IDENTIFIERS_COLOR = new Color(165, 42, 42);
     public static final Color COMMENT_COLOR = Color.gray;
     public static final Color LITERAL_COLOR = Color.magenta;
@@ -38,8 +38,7 @@ public class Utilities {
     }
 
     public static boolean isBracket(Character c) {
-        if (c == null) return false;
-        return brackets.contains(c);
+        return c != null && brackets.contains(c);
     }
 
     public static Character matchingBracket(char c) {
