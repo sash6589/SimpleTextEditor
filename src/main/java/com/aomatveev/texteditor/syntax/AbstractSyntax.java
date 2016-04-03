@@ -119,7 +119,7 @@ public abstract class AbstractSyntax {
 
     protected void checkIfComment(int lineIndex) {
         checkIfLineComment(lineIndex);
-        updateTextCommentedAfterInsert(lineIndex);
+        checkIfTextComment(lineIndex);
     }
 
     private void initLists() {
@@ -278,10 +278,10 @@ public abstract class AbstractSyntax {
         return false;
     }
 
-    private void updateTextCommentedAfterInsert(int lineIndex) {
+    private void checkIfTextComment(int lineIndex) {
         if (lineIndex == textCommentIndex.size()) return;
         if (document.lineLength(lineIndex) == 0) {
-            updateTextCommentedAfterInsert(lineIndex + 1);
+            checkIfTextComment(lineIndex + 1);
         }
         boolean commentedMode = isPrevLineCommented(lineIndex);
         StringBuilder line = document.getLine(lineIndex);
@@ -309,7 +309,7 @@ public abstract class AbstractSyntax {
         textCommentIndex.set(lineIndex, res);
         if (((commentedMode) && (!isNextLineCommented(lineIndex))) ||
                 ((!commentedMode) && (isNextLineCommented(lineIndex)))) {
-            updateTextCommentedAfterInsert(lineIndex + 1);
+            checkIfTextComment(lineIndex + 1);
         }
     }
 
