@@ -1,10 +1,11 @@
 package com.aomatveev.texteditor.model;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
+import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 import com.aomatveev.texteditor.syntax.AbstractSyntax;
 import com.aomatveev.texteditor.syntax.NoneSyntax;
-import javafx.util.Pair;
+
 
 import java.awt.*;
 import java.awt.datatransfer.Clipboard;
@@ -198,8 +199,8 @@ public class SimpleDocument {
         syntax.resetMatchingBracket();
         syntax.resetComment();
         Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
-        SimpleCaret first = bounds.getKey();
-        SimpleCaret second = bounds.getValue();
+        SimpleCaret first = bounds.getFirst();
+        SimpleCaret second = bounds.getSecond();
         while (first.lineIndex != second.lineIndex) {
             removeUntilCaret(second);
         }
@@ -226,8 +227,8 @@ public class SimpleDocument {
 
     public Pair<Integer, Integer> getSelectedBounds(int index) {
         Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
-        SimpleCaret first = bounds.getKey();
-        SimpleCaret second = bounds.getValue();
+        SimpleCaret first = bounds.getFirst();
+        SimpleCaret second = bounds.getSecond();
         if ((index < first.lineIndex) || (index > second.lineIndex)) {
             return null;
         }
@@ -376,8 +377,8 @@ public class SimpleDocument {
     private String getSelectedText() {
         StringBuilder res = new StringBuilder();
         Pair<SimpleCaret, SimpleCaret> bounds = findSelectedBounds();
-        SimpleCaret first = bounds.getKey();
-        SimpleCaret second = bounds.getValue();
+        SimpleCaret first = bounds.getFirst();
+        SimpleCaret second = bounds.getSecond();
         while (first.lineIndex != second.lineIndex) {
             res.append(lines.get(first.lineIndex).substring(first.charIndex)).append("\n");
             first.lineIndex += 1;

@@ -1,9 +1,9 @@
 package com.aomatveev.texteditor.syntax;
 
 import com.aomatveev.texteditor.model.SimpleDocument;
+import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 import com.aomatveev.texteditor.utilities.Utilities;
-import javafx.util.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -207,7 +207,7 @@ public abstract class AbstractSyntax {
     private boolean isCharCommented(int lineIndex, int charIndex) {
         List<Pair<Integer, Integer>> pairs = textCommentIndex.get(lineIndex);
         for (Pair<Integer, Integer> pair : pairs) {
-            if ((charIndex >= pair.getKey()) && (charIndex < pair.getValue())) {
+            if ((charIndex >= pair.getFirst()) && (charIndex < pair.getSecond())) {
                 return true;
             }
         }
@@ -218,7 +218,7 @@ public abstract class AbstractSyntax {
     private boolean isCharTextCommented(int lineIndex, int charIndex) {
         List<Pair<Integer, Integer>> pairs = textCommentIndex.get(lineIndex);
         for (Pair<Integer, Integer> pair : pairs) {
-            if ((charIndex >= pair.getKey()) && (charIndex < pair.getValue())) {
+            if ((charIndex >= pair.getFirst()) && (charIndex < pair.getSecond())) {
                 return true;
             }
         }

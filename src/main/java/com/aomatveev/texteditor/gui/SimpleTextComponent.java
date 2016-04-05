@@ -6,9 +6,9 @@ import com.aomatveev.texteditor.handlers.SimpleMouseMotionListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.utilities.Utilities;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
+import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.syntax.AbstractSyntax;
 import com.aomatveev.texteditor.syntax.NoneSyntax;
-import javafx.util.Pair;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -110,7 +110,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                 if (document.isSelected()) {
                     Pair<Integer, Integer> bounds = document.getSelectedBounds(i);
                     if (bounds != null) {
-                        Shape base = layout.getLogicalHighlightShape(bounds.getKey(), bounds.getValue());
+                        Shape base = layout.getLogicalHighlightShape(bounds.getFirst(), bounds.getSecond());
                         AffineTransform at = AffineTransform.getTranslateInstance(origin.getX(), origin.getY());
                         Shape highlight = at.createTransformedShape(base);
                         graphics2D.setColor(Utilities.SELECT_COLOR);

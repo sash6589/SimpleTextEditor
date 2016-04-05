@@ -2,7 +2,8 @@ package com.aomatveev.texteditor.handlers;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
 import com.aomatveev.texteditor.model.SimpleDocument;
-import javafx.util.Pair;
+import com.aomatveev.texteditor.primitives.Pair;
+
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -21,13 +22,13 @@ public class SimpleMouseListener extends MouseAdapter {
     public void mouseClicked(MouseEvent e) {
         Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel);
         document.cancelSelect();
-        document.moveCaret(position.getKey(), position.getValue());
+        document.moveCaret(position.getFirst(), position.getSecond());
     }
 
     @Override
     public void mousePressed(MouseEvent e) {
         Pair<Integer, Integer> position = ListenerUtils.findPosition(e, viewModel);
-        document.moveSelectedCaret(position.getKey(), position.getValue());
+        document.moveSelectedCaret(position.getFirst(), position.getSecond());
     }
 
 }

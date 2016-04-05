@@ -1,7 +1,7 @@
 package com.aomatveev.texteditor.handlers;
 
 import com.aomatveev.texteditor.gui.SimpleTextComponent;
-import javafx.util.Pair;
+import com.aomatveev.texteditor.primitives.Pair;
 
 import java.awt.event.MouseEvent;
 import java.awt.font.TextHitInfo;

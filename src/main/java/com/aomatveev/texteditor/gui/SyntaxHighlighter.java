@@ -2,8 +2,9 @@ package com.aomatveev.texteditor.gui;
 
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
+import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.utilities.Utilities;
-import javafx.util.Pair;
+
 
 import java.awt.font.TextAttribute;
 import java.awt.font.TextLayout;
@@ -95,9 +96,9 @@ public class SyntaxHighlighter {
         }
         List<Pair<Integer, Integer>> pairs = document.getTextCommentIndex().get(lineIndex);
         for (Pair<Integer, Integer> pair : pairs) {
-            if (pair.getKey() < pair.getValue()) {
-                coloredString.addAttribute(TextAttribute.FOREGROUND, Utilities.COMMENT_COLOR, pair.getKey(),
-                        pair.getValue());
+            if (pair.getFirst() < pair.getSecond()) {
+                coloredString.addAttribute(TextAttribute.FOREGROUND, Utilities.COMMENT_COLOR, pair.getFirst(),
+                        pair.getSecond());
             }
         }
     }

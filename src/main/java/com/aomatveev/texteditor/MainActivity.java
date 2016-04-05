@@ -9,7 +9,6 @@ import com.aomatveev.texteditor.syntax.JavascriptSyntax;
 import com.aomatveev.texteditor.utilities.Loader;
 import com.aomatveev.texteditor.utilities.Saver;
 
-
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
