@@ -80,7 +80,7 @@ public abstract class AbstractSyntax {
 
     public void checkIfBracket() {
         SimpleCaret currentCaret = document.getCurrentCaret();
-        Character c = currentCaret.getSymbol();
+        Character c = currentCaret.getSymbol(document);
         if (isCharCommented(currentCaret.lineIndex, currentCaret.charIndex)) return;
         if (c != null) {
             if (Utilities.isBracket(c)) {
@@ -137,7 +137,7 @@ public abstract class AbstractSyntax {
 
     private void findMatchingBracket() {
         SimpleCaret currentCaret = document.getCurrentCaret();
-        char bracketChar = currentCaret.getSymbol();
+        char bracketChar = currentCaret.getSymbol(document);
         char matchingBracketChar = Utilities.matchingBracket(bracketChar);
         if (Utilities.isOpenBracket(bracketChar)) {
             findCloseBracket(bracketChar, matchingBracketChar);
@@ -312,5 +312,4 @@ public abstract class AbstractSyntax {
             checkIfTextComment(lineIndex + 1);
         }
     }
-
 }

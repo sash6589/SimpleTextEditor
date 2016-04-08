@@ -6,16 +6,12 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
     public int lineIndex;
     public int charIndex;
 
-    private SimpleDocument document;
-
-    public SimpleCaret(SimpleDocument document, int lineIndex, int charIndex) {
-        this.document = document;
+    public SimpleCaret(int lineIndex, int charIndex) {
         this.lineIndex = lineIndex;
         this.charIndex = charIndex;
     }
 
     public SimpleCaret(SimpleCaret other) {
-        this.document = other.getDocument();
         lineIndex = other.lineIndex;
         charIndex = other.charIndex;
     }
@@ -28,19 +24,19 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         return charIndex == 0;
     }
 
-    public boolean atEndLine() {
+    public boolean atEndLine(SimpleDocument document) {
         return charIndex == document.lineLength(lineIndex);
     }
 
-    public boolean atEndFile() {
-        return atEndLine() && (lineIndex == document.linesSize() - 1);
+    public boolean atEndFile(SimpleDocument document) {
+        return atEndLine(document) && (lineIndex == document.linesSize() - 1);
     }
 
     public boolean atFirstLine() {
         return lineIndex == 0;
     }
 
-    public boolean atLastLine() {
+    public boolean atLastLine(SimpleDocument document) {
         return lineIndex == document.linesSize() - 1;
     }
 
@@ -76,7 +72,7 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex += text.length();
     }
 
-    public void moveLeft() {
+    public void moveLeft(SimpleDocument document) {
         if (atBeginningFile()) {
             return;
         }
@@ -88,11 +84,11 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex -= 1;
     }
 
-    public void moveRight() {
-        if (atEndFile()) {
+    public void moveRight(SimpleDocument document) {
+        if (atEndFile(document)) {
             return;
         }
-        if (atEndLine()) {
+        if (atEndLine(document)) {
             lineIndex += 1;
             charIndex = 0;
             return;
@@ -100,21 +96,21 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex += 1;
     }
 
-    public void moveUp() {
+    public void moveUp(SimpleDocument document) {
         if (!atFirstLine()) {
             lineIndex -= 1;
             charIndex = Math.min(charIndex, document.lineLength(lineIndex));
         }
     }
 
-    public void moveDown() {
-        if (!atLastLine()) {
+    public void moveDown(SimpleDocument document) {
+        if (!atLastLine(document)) {
             lineIndex += 1;
             charIndex = Math.min(charIndex, document.lineLength(lineIndex));
         }
     }
 
-    public void moveEndLine() {
+    public void moveEndLine(SimpleDocument document) {
         charIndex = document.lineLength(lineIndex);
     }
 
@@ -122,9 +118,9 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex = 0;
     }
 
-    public void moveToPrevWord() {
+    public void moveToPrevWord(SimpleDocument document) {
         if (atBeginningLine()) {
-            moveLeft();
+            moveLeft(document);
             return;
         }
         StringBuilder line = document.getLine(lineIndex);
@@ -137,9 +133,9 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex = 0;
     }
 
-    public void moveToNextWord() {
-        if (atEndLine()) {
-            moveRight();
+    public void moveToNextWord(SimpleDocument document) {
+        if (atEndLine(document)) {
+            moveRight(document);
             return;
         }
         StringBuilder line = document.getLine(lineIndex);
@@ -152,20 +148,20 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
         charIndex = line.length();
     }
 
-    public void moveToEndFile() {
+    public void moveToEndFile(SimpleDocument document) {
         lineIndex = document.linesSize() - 1;
         charIndex = document.lineLength(lineIndex);
     }
 
-    public void moveToNextLine() {
-        if (atEndFile()) {
+    public void moveToNextLine(SimpleDocument document) {
+        if (atEndFile(document)) {
             return;
         }
         lineIndex += 1;
         charIndex = 0;
     }
 
-    public Character getSymbol() {
+    public Character getSymbol(SimpleDocument document) {
         if (charIndex == document.lineLength(lineIndex)) {
             return null;
         }
@@ -178,9 +174,5 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
             return new Integer(charIndex).compareTo(o.charIndex);
         }
         return new Integer(lineIndex).compareTo(o.lineIndex);
-    }
-
-    private SimpleDocument getDocument() {
-        return document;
     }
 }

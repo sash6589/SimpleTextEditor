@@ -5,7 +5,6 @@ import com.aomatveev.texteditor.handlers.SimpleMouseListener;
 import com.aomatveev.texteditor.handlers.SimpleMouseMotionListener;
 import com.aomatveev.texteditor.model.SimpleDocument;
 import com.aomatveev.texteditor.utilities.Utilities;
-import com.aomatveev.texteditor.primitives.SimpleCaret;
 import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.syntax.AbstractSyntax;
 import com.aomatveev.texteditor.syntax.NoneSyntax;
@@ -20,15 +19,11 @@ import java.awt.geom.Point2D;
 public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private SimpleDocument document;
-    private SimpleCaret currentCaret;
-    private SyntaxHighlighter syntaxHighlighter;
     private int lineSpacing;
     private Dimension preferredScrollableViewportSize;
 
     public SimpleTextComponent() {
         document = new SimpleDocument(this);
-        currentCaret = document.getCurrentCaret();
-        syntaxHighlighter = new SyntaxHighlighter(document);
         setSyntax(new NoneSyntax());
         preferredScrollableViewportSize = new Dimension();
         initLineSpacing();
@@ -41,7 +36,6 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     public void newFile() {
         document.newDocument();
-        currentCaret = document.getCurrentCaret();
         updateView();
     }
 
@@ -69,8 +63,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         if (lineIndex >= document.linesSize()) {
             return Utilities.defaultTextLayout;
         }
-        StringBuilder line = document.getLine(lineIndex);
-        return syntaxHighlighter.highlightSyntax(line.toString(), lineIndex);
+        return SyntaxHighlighter.highlightSyntax(lineIndex, document);
     }
 
     public void paste() {
@@ -119,7 +112,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                 }
                 graphics2D.setColor(Utilities.TEXT_COLOR);
                 layout.draw(graphics2D, (float) origin.getX(), (float) origin.getY());
-                if (i == currentCaret.lineIndex) {
+                if (i == document.getCaretLineIndex()) {
                     caretLayout = layout;
                 }
             }
@@ -134,7 +127,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
             } else {
                 graphics2D.setColor(Utilities.TEXT_COLOR);
             }
-            Shape[] carets = caretLayout.getCaretShapes(currentCaret.charIndex);
+            Shape[] carets = caretLayout.getCaretShapes(document.getCaretCharIndex());
             graphics2D.draw(carets[0]);
         }
     }
@@ -151,7 +144,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
     private Point2D.Float computeCaretOrigin() {
         Point2D.Float origin = computeLayoutOrigin();
-        origin.y += lineSpacing * currentCaret.lineIndex;
+        origin.y += lineSpacing * document.getCaretLineIndex();
         return origin;
     }
 

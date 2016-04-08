@@ -5,6 +5,7 @@ import com.aomatveev.texteditor.primitives.Pair;
 import com.aomatveev.texteditor.primitives.SimpleCaret;
 import com.aomatveev.texteditor.syntax.AbstractSyntax;
 import com.aomatveev.texteditor.syntax.NoneSyntax;
+import com.aomatveev.texteditor.utilities.Utilities;
 
 
 import java.awt.*;
@@ -41,28 +42,8 @@ public class SimpleDocument {
     }
 
 
-    public List<StringBuilder> getLines() {
-        return lines;
-    }
-
     public StringBuilder getLine(int index) {
         return lines.get(index);
-    }
-
-    public AbstractSyntax getSyntax() {
-        return syntax;
-    }
-
-    public List<Integer> getMatchingBracket() {
-        return syntax.getMatchingBracket();
-    }
-
-    public List<Integer> getLineCommentIndex() {
-        return syntax.getLineCommentIndex();
-    }
-
-    public List<List<Pair<Integer, Integer>>> getTextCommentIndex() {
-        return syntax.getTextCommentIndex();
     }
 
     public int lineLength(int lineIndex) {
@@ -98,7 +79,7 @@ public class SimpleDocument {
     public void insertText(char c) {
         syntax.resetMatchingBracket();
         syntax.resetComment();
-        if ((insertMode) && (!currentCaret.atEndLine())) {
+        if ((insertMode) && (!currentCaret.atEndLine(this))) {
             lines.get(currentCaret.lineIndex).setCharAt(currentCaret.charIndex, c);
         } else {
             lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
@@ -129,7 +110,7 @@ public class SimpleDocument {
     }
 
     public void append(String text) {
-        currentCaret.moveToEndFile();
+        currentCaret.moveToEndFile(this);
         insertText(text);
     }
 
@@ -151,10 +132,10 @@ public class SimpleDocument {
     }
 
     public void deleteChar() {
-        if (!currentCaret.atEndFile()) {
+        if (!currentCaret.atEndFile(this)) {
             syntax.resetMatchingBracket();
-            if (currentCaret.atEndLine()) {
-                currentCaret.moveToNextLine();
+            if (currentCaret.atEndLine(this)) {
+                currentCaret.moveToNextLine(this);
                 backspaceLine();
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex);
@@ -215,10 +196,18 @@ public class SimpleDocument {
 
     public void selectAll() {
         isSelected = true;
-        startSelectCaret = new SimpleCaret(this, 0, 0);
-        currentCaret.moveToEndFile();
+        startSelectCaret = new SimpleCaret(0, 0);
+        currentCaret.moveToEndFile(this);
 
         viewModel.updateView();
+    }
+
+    public int getCaretLineIndex() {
+        return currentCaret.lineIndex;
+    }
+
+    public int getCaretCharIndex() {
+        return currentCaret.charIndex;
     }
 
     public SimpleCaret getCurrentCaret() {
@@ -250,28 +239,28 @@ public class SimpleDocument {
         syntax.resetComment();
         if (e.isControlDown()) {
             if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-                currentCaret.moveToPrevWord();
+                currentCaret.moveToPrevWord(this);
             }
             if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-                currentCaret.moveToNextWord();
+                currentCaret.moveToNextWord(this);
             }
             viewModel.updateView();
             return;
         }
         if (e.getKeyCode() == KeyEvent.VK_LEFT) {
-            currentCaret.moveLeft();
+            currentCaret.moveLeft(this);
         }
         if (e.getKeyCode() == KeyEvent.VK_RIGHT) {
-            currentCaret.moveRight();
+            currentCaret.moveRight(this);
         }
         if (e.getKeyCode() == KeyEvent.VK_UP) {
-            currentCaret.moveUp();
+            currentCaret.moveUp(this);
         }
         if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            currentCaret.moveDown();
+            currentCaret.moveDown(this);
         }
         if (e.getKeyCode() == KeyEvent.VK_END) {
-            currentCaret.moveEndLine();
+            currentCaret.moveEndLine(this);
         }
         if (e.getKeyCode() == KeyEvent.VK_HOME) {
             currentCaret.moveStartLine();
@@ -313,7 +302,7 @@ public class SimpleDocument {
     public void moveSelectedCaret(int lineIndex, int charIndex) {
         if (!isSelected) {
             isSelected = true;
-            startSelectCaret = new SimpleCaret(this, lineIndex, charIndex);
+            startSelectCaret = new SimpleCaret(lineIndex, charIndex);
         }
         moveCaret(lineIndex, charIndex);
     }
@@ -321,6 +310,98 @@ public class SimpleDocument {
     public void cancelSelect() {
         isSelected = false;
         startSelectCaret = null;
+    }
+
+    public List<Pair<Integer, Integer>> getIdentifiersBounds(int lineIndex) {
+        List<Pair<Integer, Integer>> bounds = new ArrayList<>();
+        StringBuilder text = getLine(lineIndex);
+        boolean start = false;
+        int startIndex = 0;
+
+        for (int i = 0; i < text.length(); ++i) {
+            if (syntax.isValidIdentifier(start, text.charAt(i))) {
+                if (!start) {
+                    startIndex = i;
+                }
+                start = true;
+            } else {
+                if (startIndex < i) {
+                    bounds.add(new Pair<>(startIndex, i));
+                }
+                start = false;
+            }
+        }
+        if (start) {
+            bounds.add(new Pair<>(startIndex, text.length()));
+        }
+        return bounds;
+    }
+
+    public List<Pair<Integer, Integer>> getKeywordsBounds(int lineIndex) {
+        List<Pair<Integer, Integer>> bounds = new ArrayList<>();
+        StringBuilder text = getLine(lineIndex);
+        List<String> keywords = syntax.getKeywords();
+        String specialText = "! " + text;
+        String[] words = specialText.split(" ");
+        int start = 0;
+
+        for (int i = 1; i < words.length; ++i) {
+            if (keywords.contains(words[i])) {
+                bounds.add(new Pair<>(start, start + words[i].length()));
+            }
+            start += words[i].length() + 1;
+        }
+        return bounds;
+    }
+
+    public List<Pair<Integer, Integer>> getLiteralsBounds(int lineIndex) {
+        List<Pair<Integer, Integer>> bounds = new ArrayList<>();
+        StringBuilder text = getLine(lineIndex);
+        boolean start = false;
+        int startIndex = 0;
+
+        for (int i = 0; i < text.length(); ++i) {
+            if (text.charAt(i) == '"') {
+                if (start) {
+                    bounds.add(new Pair<>(startIndex, i + 1));
+                } else {
+                    startIndex = i;
+                }
+                start ^= true;
+            }
+        }
+        if (start) {
+            bounds.add(new Pair<>(startIndex, text.length()));
+        }
+        return bounds;
+    }
+
+    public List<Pair<Integer, Integer>> getBracketsBounds(int lineIndex) {
+        List<Pair<Integer, Integer>> bounds = new ArrayList<>();
+        Integer index = syntax.getMatchingBracket().get(lineIndex);
+        if (index != -1) {
+            bounds.add(new Pair<>(index, index + 1));
+        }
+        if ((Utilities.isBracket(currentCaret.getSymbol(this))) && (currentCaret.lineIndex == lineIndex)) {
+            bounds.add(new Pair<>(currentCaret.charIndex, currentCaret.charIndex + 1));
+        }
+        return bounds;
+    }
+
+    public List<Pair<Integer, Integer>> getCommentsBounds(int lineIndex) {
+        List<Pair<Integer, Integer>> bounds = new ArrayList<>();
+        StringBuilder text = getLine(lineIndex);
+        Integer index = syntax.getLineCommentIndex().get(lineIndex);
+        if (index != -1) {
+            bounds.add(new Pair<>(index, text.length()));
+        }
+        List<Pair<Integer, Integer>> pairs = syntax.getTextCommentIndex().get(lineIndex);
+        for (Pair<Integer, Integer> pair : pairs) {
+            if (pair.getFirst() < pair.getSecond()) {
+                bounds.add(pair);
+            }
+        }
+        return bounds;
     }
 
     @Override
@@ -351,7 +432,7 @@ public class SimpleDocument {
         if (linesSize() > 0) {
             charCount = lineLength(linesCount);
         }
-        currentCaret = new SimpleCaret(this, linesCount, charCount);
+        currentCaret = new SimpleCaret(linesCount, charCount);
     }
 
     private Pair<SimpleCaret, SimpleCaret> findSelectedBounds() {

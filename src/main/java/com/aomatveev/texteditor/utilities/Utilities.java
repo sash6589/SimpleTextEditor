@@ -34,7 +34,7 @@ public class Utilities {
         attributesMap.put(TextAttribute.FAMILY, "Serif");
         attributesMap.put(TextAttribute.SIZE, FONT_SIZE);
         defaultTextLayout = new TextLayout(" ", attributesMap, DEFAULT_FRC);
-        brackets = new ArrayList<>(Arrays.asList('(', '{', '[', ']', '}', ')'));
+        brackets = Arrays.asList('(', '{', '[', ']', '}', ')');
     }
 
     public static boolean isBracket(Character c) {
