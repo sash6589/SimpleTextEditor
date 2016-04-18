@@ -11,3 +11,7 @@
 4) `cd build/libs`
 
 5) `java -jar texteditor-1.0-SNAPSHOT.jar`
+
+## Run tests
+
+`gradle test`
