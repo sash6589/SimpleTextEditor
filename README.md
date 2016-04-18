@@ -1,6 +1,6 @@
 # SimpleTextEditor
 
-## Build and Run.
+## Build and Run
 
 1) `clone` this repository to `%local directory%`.
 
