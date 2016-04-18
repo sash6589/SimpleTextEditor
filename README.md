@@ -14,4 +14,4 @@
 
 ## Run tests
 
-`gradle test`
+1) `gradle test`
