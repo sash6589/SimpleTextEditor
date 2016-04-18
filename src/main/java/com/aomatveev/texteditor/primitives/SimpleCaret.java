@@ -139,7 +139,7 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
             return;
         }
         StringBuilder line = document.getLine(lineIndex);
-        for (int i = charIndex; i < line.length(); ++i) {
+        for (int i = charIndex; i < line.length() - 1; ++i) {
             if ((line.charAt(i) == ' ') && (line.charAt(i + 1) != ' ')) {
                 charIndex = i + 1;
                 return;
@@ -174,5 +174,12 @@ public class SimpleCaret implements Comparable<SimpleCaret> {
             return new Integer(charIndex).compareTo(o.charIndex);
         }
         return new Integer(lineIndex).compareTo(o.lineIndex);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof SimpleCaret)) return false;
+        SimpleCaret caret = (SimpleCaret) o;
+        return lineIndex == caret.lineIndex && charIndex == caret.charIndex;
     }
 }

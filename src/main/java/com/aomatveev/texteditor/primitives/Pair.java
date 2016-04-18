@@ -16,4 +16,10 @@ public class Pair<F, S> {
     public S getSecond() {
         return second;
     }
+
+    public boolean equals(Object o) {
+        if (!(o instanceof Pair)) return false;
+        Pair pair = (Pair) o;
+        return getFirst() == pair.getFirst() && getSecond() == pair.getSecond();
+    }
 }

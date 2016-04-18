@@ -325,7 +325,7 @@ public class SimpleDocument {
                 }
                 start = true;
             } else {
-                if (startIndex < i) {
+                if ((start) && (startIndex < i)) {
                     bounds.add(new Pair<>(startIndex, i));
                 }
                 start = false;
@@ -379,6 +379,7 @@ public class SimpleDocument {
     public List<Pair<Integer, Integer>> getBracketsBounds(int lineIndex) {
         List<Pair<Integer, Integer>> bounds = new ArrayList<>();
         Integer index = syntax.getMatchingBracket().get(lineIndex);
+
         if (index != -1) {
             bounds.add(new Pair<>(index, index + 1));
         }
@@ -408,9 +409,29 @@ public class SimpleDocument {
     public String toString() {
         StringBuilder ans = new StringBuilder();
         for (int i = 0; i < linesSize(); ++i) {
-            ans.append(lines.get(i)).append("\n");
+            ans.append(lines.get(i));
+            if (i < linesSize() - 1) {
+                ans.append('\n');
+            }
         }
+
         return ans.toString();
+    }
+
+    protected void insertText(String text) {
+        String[] parts = text.split("\n");
+        for (int i = 0; i < parts.length; ++i) {
+            insertLine(parts[i]);
+            if (i < parts.length - 1) {
+                insertNewLine();
+            }
+        }
+        int ind = text.length() - 1;
+        while ((ind >= 0) && (text.charAt(ind) == '\n')) {
+            insertNewLine();
+            ind--;
+        }
+        viewModel.updateView();
     }
 
     private void init() {
@@ -468,21 +489,6 @@ public class SimpleDocument {
         res.append(lines.get(first.lineIndex).substring(first.charIndex, second.charIndex));
         return res.toString();
     }
-
-    private void insertText(String text) {
-        String[] parts = text.split("\n");
-        for (int i = 0; i < parts.length; ++i) {
-            insertLine(parts[i]);
-            if (i < parts.length - 1) {
-                insertNewLine();
-            }
-        }
-        if (text.charAt(text.length() - 1) == '\n') {
-            insertNewLine();
-        }
-        viewModel.updateView();
-    }
-
 
     private void insertLine(String text) {
         syntax.resetMatchingBracket();
