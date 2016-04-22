@@ -25,7 +25,7 @@ public class SimpleDocument {
     private SimpleCaret currentCaret;
     private SimpleCaret startSelectCaret;
     private AbstractSyntax syntax;
-    private int length;
+    private int maxLength;
     private boolean isSelected;
     private boolean insertMode;
 
@@ -36,17 +36,19 @@ public class SimpleDocument {
     }
 
     public void newDocument() {
-        length = 0;
+        maxLength = 0;
         init();
         setSyntax(new NoneSyntax());
     }
 
 
     public StringBuilder getLine(int index) {
+        if (index >= linesSize()) return new StringBuilder("");
         return lines.get(index);
     }
 
     public int lineLength(int lineIndex) {
+        if (lineIndex >= linesSize()) return 0;
         return lines.get(lineIndex).length();
     }
 
@@ -54,8 +56,8 @@ public class SimpleDocument {
         return lines.size();
     }
 
-    public int length() {
-        return length;
+    public int getMaxLength() {
+        return maxLength;
     }
 
     public void setSyntax(AbstractSyntax syntax) {
@@ -83,9 +85,9 @@ public class SimpleDocument {
             lines.get(currentCaret.lineIndex).setCharAt(currentCaret.charIndex, c);
         } else {
             lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, c);
-            length += 1;
         }
 
+        updateMaxLength();
         syntax.checkIfComment();
         currentCaret.updateAfterInsertChar();
         syntax.checkIfBracket();
@@ -102,7 +104,7 @@ public class SimpleDocument {
         syntax.getMatchingBracket().add(currentCaret.lineIndex + 1, -1);
         syntax.getLineCommentIndex().add(currentCaret.lineIndex + 1, -1);
         syntax.getTextCommentIndex().add(currentCaret.lineIndex + 1, new ArrayList<>());
-        length += 1;
+        updateMaxLength();
         syntax.checkIfComment();
         currentCaret.updateAfterInsertNewline();
         syntax.checkIfBracket();
@@ -121,7 +123,7 @@ public class SimpleDocument {
                 backspaceLine();
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex - 1);
-                length -= 1;
+                updateMaxLength();
                 currentCaret.updateAfterDeleteChar();
             }
             syntax.resetComment();
@@ -139,7 +141,7 @@ public class SimpleDocument {
                 backspaceLine();
             } else {
                 lines.get(currentCaret.lineIndex).deleteCharAt(currentCaret.charIndex);
-                length -= 1;
+                updateMaxLength();
             }
             syntax.resetComment();
             syntax.checkIfBracket();
@@ -186,8 +188,8 @@ public class SimpleDocument {
             removeUntilCaret(second);
         }
         lines.get(first.lineIndex).delete(first.charIndex, second.charIndex);
-        length -= second.charIndex - first.charIndex;
         currentCaret.setPosition(first);
+        updateMaxLength();
         cancelSelect();
         syntax.checkIfComment();
         syntax.checkIfBracket();
@@ -279,12 +281,12 @@ public class SimpleDocument {
                 syntax.addMatchingBracket();
                 syntax.addLineCommentIndex();
                 syntax.addTextCommentIndex();
-                length += 1;
             } else {
                 lineIndex -= 1;
             }
         }
         charIndex = Math.min(lineLength(lineIndex), charIndex);
+        updateMaxLength();
         currentCaret.setPosition(lineIndex, charIndex);
         syntax.checkIfBracket();
         syntax.checkIfComment();
@@ -300,8 +302,10 @@ public class SimpleDocument {
     }
 
     public void moveSelectedCaret(int lineIndex, int charIndex) {
+        charIndex = Math.min(charIndex, lineLength(lineIndex));
         if (!isSelected) {
             isSelected = true;
+            lineIndex = Math.min(lineIndex, linesSize() - 1);
             startSelectCaret = new SimpleCaret(lineIndex, charIndex);
         }
         moveCaret(lineIndex, charIndex);
@@ -465,7 +469,6 @@ public class SimpleDocument {
     }
 
     private void removeUntilCaret(SimpleCaret caret) {
-        length -= caret.charIndex;
         int newCharIndex = lineLength(caret.lineIndex - 1);
         StringBuilder rest = new StringBuilder(getLine(caret.lineIndex).substring(caret.charIndex));
         lines.get(caret.lineIndex - 1).append(rest);
@@ -494,7 +497,7 @@ public class SimpleDocument {
         syntax.resetMatchingBracket();
         syntax.resetComment();
         lines.get(currentCaret.lineIndex).insert(currentCaret.charIndex, text);
-        length += text.length();
+        updateMaxLength();
         syntax.checkIfComment();
         currentCaret.updateAfterInsertText(text);
         syntax.checkIfBracket();
@@ -512,7 +515,11 @@ public class SimpleDocument {
         syntax.removeLineCommentIndex(currentCaret.lineIndex);
         syntax.removeTextCommentIndex(currentCaret.lineIndex);
         currentCaret.updateAfterDeleteLine(lineLength);
-        length -= 1;
+        updateMaxLength();
+    }
+
+    private void updateMaxLength() {
+        maxLength = Math.max(maxLength, lineLength(getCaretLineIndex()));
     }
 
 }

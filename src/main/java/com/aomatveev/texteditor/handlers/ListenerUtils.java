@@ -9,8 +9,8 @@ import java.awt.font.TextLayout;
 
 public class ListenerUtils {
     public static Pair<Integer, Integer> findPosition(MouseEvent e, SimpleTextComponent viewModel) {
-        float clickX = e.getX();
-        float clickY = e.getY();
+        int clickX = e.getX();
+        int clickY = e.getY();
 
         int lineIndex = findLine(clickY, viewModel);
         int charIndex = 0;
@@ -22,9 +22,9 @@ public class ListenerUtils {
         return new Pair<>(lineIndex, charIndex);
     }
 
-    private static int findLine(float clickY, SimpleTextComponent viewModel) {
+    private static int findLine(int clickY, SimpleTextComponent viewModel) {
         int lineSpacing = viewModel.getLineSpacing();
-        float yValue = 0;
+        int yValue = 0;
 
         for (int i = 0; i < viewModel.linesSize(); ++i) {
             if (yValue + lineSpacing >= clickY) {

@@ -2,6 +2,7 @@ package com.aomatveev.texteditor.handlers;
 
 import com.aomatveev.texteditor.model.SimpleDocument;
 
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
@@ -70,6 +71,7 @@ public class SimpleKeyListener extends KeyAdapter {
     private boolean specialKey(KeyEvent e) {
         return (e.getKeyCode() == KeyEvent.CHAR_UNDEFINED) || (e.isActionKey())
                 || (e.getKeyCode() == KeyEvent.VK_CONTROL) || (e.getKeyCode() == KeyEvent.VK_SHIFT)
-                || (e.getKeyCode() == KeyEvent.VK_ALT) || (e.getKeyCode() == KeyEvent.VK_META) || (e.isControlDown());
+                || (e.getKeyCode() == KeyEvent.VK_ALT) || (e.getKeyCode() == KeyEvent.VK_META) || (e.isControlDown())
+                || (e.isMetaDown()) || (e.getKeyCode() == 0);
     }
 }

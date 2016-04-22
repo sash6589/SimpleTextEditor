@@ -93,11 +93,11 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
 
         g.clearRect(0, 0, getWidth(), getHeight());
         Graphics2D graphics2D = (Graphics2D) g;
-        Point2D.Float origin = computeLayoutOrigin();
         Rectangle visibleRect = getVisibleRect();
         TextLayout caretLayout = null;
-
-        for (int i = 0; i < document.linesSize(); ++i) {
+        Pair<Integer, Integer> bound = getDrawBound(visibleRect);
+        Point2D.Double origin = computeLayoutOrigin(bound.getFirst());
+        for (int i = bound.getFirst(); i < bound.getSecond(); ++i) {
             if (needDraw(visibleRect, origin)) {
                 TextLayout layout = getTextLayout(i);
                 if (document.isSelected()) {
@@ -111,14 +111,13 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                     }
                 }
                 graphics2D.setColor(Utilities.TEXT_COLOR);
-                layout.draw(graphics2D, (float) origin.getX(), (float) origin.getY());
+                layout.draw(graphics2D, (int) origin.getX(), (int) origin.getY());
                 if (i == document.getCaretLineIndex()) {
                     caretLayout = layout;
                 }
             }
             origin.y += lineSpacing;
         }
-
         if (caretLayout != null) {
             origin = computeCaretOrigin();
             graphics2D.translate(origin.getX(), origin.getY());
@@ -132,8 +131,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         }
     }
 
-    private Point2D.Float computeLayoutOrigin() {
-        Point2D.Float origin = new Point2D.Float();
+    private Point2D.Double computeLayoutOrigin() {
+        Point2D.Double origin = new Point2D.Double();
 
         origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
         origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
@@ -141,9 +140,18 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         return origin;
     }
 
+    private Point2D.Double computeLayoutOrigin(int y) {
+        Point2D.Double origin = new Point2D.Double();
 
-    private Point2D.Float computeCaretOrigin() {
-        Point2D.Float origin = computeLayoutOrigin();
+        origin.x = ((EmptyBorder) getBorder()).getBorderInsets().left;
+        origin.y = ((EmptyBorder) getBorder()).getBorderInsets().top;
+        origin.y += y * lineSpacing;
+
+        return origin;
+    }
+
+    private Point2D.Double computeCaretOrigin() {
+        Point2D.Double origin = computeLayoutOrigin();
         origin.y += lineSpacing * document.getCaretLineIndex();
         return origin;
     }
@@ -152,29 +160,16 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         lineSpacing = ((int) (Utilities.defaultTextLayout.getAscent() + Utilities.defaultTextLayout.getDescent())) + 1;
     }
 
-    private Dimension computeDimension() {
-        int top = ((EmptyBorder) getBorder()).getBorderInsets().top;
-        int height = top + (lineSpacing * document.linesSize());
-
-        int maxLen = 0;
-        for (int i = 0; i < document.linesSize(); ++i) {
-            if (maxLen < document.getLine(i).length()) {
-                maxLen = document.getLine(i).length();
-            }
-        }
-
-        int left = ((EmptyBorder) getBorder()).getBorderInsets().left;
-        int width = left + (maxLen * Utilities.CHARACTER_WIDTH);
-        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
-        preferredScrollableViewportSize.setSize(Math.max(screenSize.getWidth(), width), Math.max(screenSize.getHeight(), height));
-
-        return preferredScrollableViewportSize;
-    }
-
     private boolean needDraw(Rectangle visibleRect, Point2D origin) {
         return visibleRect.intersects(new Rectangle((int) origin.getX(), (int) origin.getY(), getWidth(), lineSpacing))
                 || visibleRect.intersects(new Rectangle((int) origin.getX(), (int) origin.getY() - lineSpacing,
                 getWidth(), lineSpacing));
+    }
+
+    private Pair<Integer, Integer> getDrawBound(Rectangle visibleRect) {
+        int start = (int) (visibleRect.getY() / lineSpacing);
+        int finish = (int) (((visibleRect.getY() + visibleRect.getHeight()) / lineSpacing) + 1);
+        return new Pair<>(Math.max(start - 1, 0), Math.min(finish + 1, linesSize()));
     }
 
     // --- implements Scrollable ---------------------------------
@@ -215,5 +210,18 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
     @Override
     public boolean getScrollableTracksViewportHeight() {
         return false;
+    }
+
+    private Dimension computeDimension() {
+        int top = ((EmptyBorder) getBorder()).getBorderInsets().top;
+        int height = top + (lineSpacing * document.linesSize());
+        int maxLen = document.getMaxLength();
+
+        int left = ((EmptyBorder) getBorder()).getBorderInsets().left;
+        int width = left + (maxLen * Utilities.CHARACTER_WIDTH);
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        preferredScrollableViewportSize.setSize(Math.max(screenSize.getWidth(), width), Math.max(screenSize.getHeight(), height));
+
+        return preferredScrollableViewportSize;
     }
 }
