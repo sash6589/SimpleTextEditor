@@ -15,6 +15,7 @@ import java.awt.*;
 import java.awt.font.TextLayout;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
+import java.text.AttributedString;
 
 public class SimpleTextComponent extends JPanel implements Scrollable {
 
@@ -63,7 +64,7 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         if (lineIndex >= document.linesSize()) {
             return Utilities.defaultTextLayout;
         }
-        return SyntaxHighlighter.highlightSyntax(lineIndex, document);
+        return SyntaxHighlighter.getTextLayout(lineIndex, document);
     }
 
     public void paste() {
@@ -99,8 +100,8 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
         Point2D.Double origin = computeLayoutOrigin(bound.getFirst());
         for (int i = bound.getFirst(); i < bound.getSecond(); ++i) {
             if (needDraw(visibleRect, origin)) {
-                TextLayout layout = getTextLayout(i);
                 if (document.isSelected()) {
+                    TextLayout layout = getTextLayout(i);
                     Pair<Integer, Integer> bounds = document.getSelectedBounds(i);
                     if (bounds != null) {
                         Shape base = layout.getLogicalHighlightShape(bounds.getFirst(), bounds.getSecond());
@@ -109,11 +110,16 @@ public class SimpleTextComponent extends JPanel implements Scrollable {
                         graphics2D.setColor(Utilities.SELECT_COLOR);
                         graphics2D.fill(highlight);
                     }
+                    graphics2D.setColor(Utilities.TEXT_COLOR);
+                    layout.draw(graphics2D, (int) origin.getX(), (int) origin.getY());
+                } else {
+                    AttributedString drawString = SyntaxHighlighter.getAttributedString(i, document);
+                    graphics2D.setColor(Utilities.TEXT_COLOR);
+                    graphics2D.drawString(drawString.getIterator(), (int) origin.getX(), (int) origin.getY());
                 }
-                graphics2D.setColor(Utilities.TEXT_COLOR);
-                layout.draw(graphics2D, (int) origin.getX(), (int) origin.getY());
+                
                 if (i == document.getCaretLineIndex()) {
-                    caretLayout = layout;
+                    caretLayout = getTextLayout(i);
                 }
             }
             origin.y += lineSpacing;

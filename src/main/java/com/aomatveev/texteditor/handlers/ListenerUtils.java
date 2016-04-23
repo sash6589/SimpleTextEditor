@@ -12,7 +12,7 @@ public class ListenerUtils {
         int clickX = e.getX();
         int clickY = e.getY();
 
-        int lineIndex = findLine(clickY, viewModel);
+        int lineIndex = clickY / viewModel.getLineSpacing();
         int charIndex = 0;
         TextLayout layout = viewModel.getTextLayout(lineIndex);
         if (lineIndex < viewModel.linesSize()) {
@@ -20,18 +20,5 @@ public class ListenerUtils {
             charIndex = currentHit.getInsertionIndex();
         }
         return new Pair<>(lineIndex, charIndex);
-    }
-
-    private static int findLine(int clickY, SimpleTextComponent viewModel) {
-        int lineSpacing = viewModel.getLineSpacing();
-        int yValue = 0;
-
-        for (int i = 0; i < viewModel.linesSize(); ++i) {
-            if (yValue + lineSpacing >= clickY) {
-                return i;
-            }
-            yValue += lineSpacing;
-        }
-        return viewModel.linesSize();
     }
 }
